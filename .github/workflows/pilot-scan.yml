@@ -1,0 +1,79 @@
+name: Pilot Accessibility Scan (Quickstart + GLOW)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 13 * * 1'
+
+jobs:
+  quickstart_scan:
+    name: Quickstart Discovery + Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout proposal repo
+        uses: actions/checkout@v4
+
+      - name: Discover Quickstart URLs
+        id: discover_quickstart
+        uses: ./.github/actions/discover
+        with:
+          seed_urls: |
+            https://quickstart.arizona.edu
+          sitemap_urls: |
+            https://quickstart.arizona.edu/sitemap.xml
+          include_domains: |
+            quickstart.arizona.edu
+          exclude_url_patterns: |
+            /user/
+            /admin/
+            \?page=
+          max_depth: 2
+          max_urls: 300
+          crawl_enabled: true
+
+      - name: Scan Quickstart discovered URLs
+        uses: github/accessibility-scanner@v3
+        with:
+          url_configs: ${{ steps.discover_quickstart.outputs.url_configs }}
+          repository: accesswatch/qs-proposal
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: quickstart-arizona-edu-production.json
+          include_screenshots: true
+          open_grouped_issues: true
+          scans: '["axe","reflow-scan"]'
+
+  glow_scan:
+    name: GLOW Discovery + Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout proposal repo
+        uses: actions/checkout@v4
+
+      - name: Discover GLOW URLs
+        id: discover_glow
+        uses: ./.github/actions/discover
+        with:
+          seed_urls: |
+            https://www.letitglow.app
+          sitemap_urls: |
+            https://www.letitglow.app/sitemap.xml
+          include_domains: |
+            www.letitglow.app
+            letitglow.app
+          exclude_url_patterns: |
+            /wp-admin/
+            \?replytocom=
+          max_depth: 2
+          max_urls: 350
+          crawl_enabled: true
+
+      - name: Scan GLOW discovered URLs
+        uses: github/accessibility-scanner@v3
+        with:
+          url_configs: ${{ steps.discover_glow.outputs.url_configs }}
+          repository: accesswatch/qs-proposal
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: glow-production.json
+          include_screenshots: true
+          open_grouped_issues: true
+          scans: '["axe","reflow-scan"]'

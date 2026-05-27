@@ -1,0 +1,42 @@
+name: Quickstart Discovery + Accessibility Scan
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 13 * * 2'
+
+jobs:
+  discover_and_scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout proposal repo
+        uses: actions/checkout@v4
+
+      - name: Discover URLs (Quickstart)
+        id: discover
+        uses: ./.github/actions/discover
+        with:
+          seed_urls: |
+            https://quickstart.arizona.edu
+          sitemap_urls: |
+            https://quickstart.arizona.edu/sitemap.xml
+          include_domains: |
+            quickstart.arizona.edu
+          exclude_url_patterns: |
+            /user/
+            /admin/
+            \?page=
+          max_depth: 2
+          max_urls: 300
+          crawl_enabled: true
+
+      - name: Scan discovered URLs
+        uses: github/accessibility-scanner@v3
+        with:
+          url_configs: ${{ steps.discover.outputs.url_configs }}
+          repository: accesswatch/qs-proposal
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: quickstart-arizona-edu-production.json
+          include_screenshots: true
+          open_grouped_issues: true
+          scans: '["axe", "reflow-scan"]'

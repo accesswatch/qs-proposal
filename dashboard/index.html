@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QS Proposal Dashboard (Mock)</title>
+  <title>QS Proposal Dashboard</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif; margin: 0; background: #f6f8fa; color: #1f2328; }
     header { background: #0b3d91; color: #fff; padding: 16px 24px; }
@@ -22,13 +22,13 @@
 </head>
 <body>
   <header>
-    <h1 style="margin:0;font-size:22px;">Quickstart Accessibility Dashboard (Mock)</h1>
-    <div style="opacity:.9;">Executive preview of trends, risk concentration, and remediation progress</div>
+    <h1 style="margin:0;font-size:22px;">Quickstart Accessibility Dashboard</h1>
+    <div style="opacity:.9;">Pilot metrics for trend, risk concentration, and remediation progress</div>
   </header>
   <main>
     <section class="grid" id="summary"></section>
 
-    <h2>90-Day Trend (Mock)</h2>
+    <h2>90-Day Trend</h2>
     <div class="spark" id="trend"></div>
 
     <h2>Top Violations</h2>
@@ -47,13 +47,20 @@
       <tbody id="scorecard"></tbody>
     </table>
 
-    <p class="note">This is a non-production mock dashboard for proposal review only. Data source: <code>dashboard/data/sample-metrics.json</code></p>
+    <p class="note">Data source preference: <code>dashboard/data/latest.json</code> (fallback: <code>dashboard/data/sample-metrics.json</code>).</p>
   </main>
 
   <script>
     async function load() {
-      const res = await fetch('./data/sample-metrics.json');
-      const data = await res.json();
+      let data;
+      try {
+        const latest = await fetch('./data/latest.json');
+        if (!latest.ok) throw new Error('latest not found');
+        data = await latest.json();
+      } catch {
+        const fallback = await fetch('./data/sample-metrics.json');
+        data = await fallback.json();
+      }
 
       const cards = [
         ['Health Score', data.summary.healthScore],
