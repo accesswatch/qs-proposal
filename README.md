@@ -60,6 +60,18 @@ Each track:
 2. Scans discovered URLs with `github/accessibility-scanner@v3`.
 3. Files findings to `accesswatch/qs-proposal` issues.
 
+### PR/check-in simulation workflow
+
+File: `.github/workflows/pr-checkin-simulation.yml`
+
+This covers CI-style pre-merge behavior:
+1. Runs on `pull_request` and `workflow_dispatch`.
+2. Discovers URLs from a target rendered endpoint.
+3. Runs scanner with non-blocking or enforced mode.
+4. Publishes a step summary showing target, URL count, mode, and outcome.
+
+Default PR target is `https://quickstart.arizona.edu`, and workflow-dispatch lets you pass any preview/staging URL.
+
 ### Dashboard refresh workflow
 
 File: `.github/workflows/dashboard-refresh.yml`
@@ -87,8 +99,19 @@ Note: `github/accessibility-scanner` requires this token input.
 1. Open **Actions** in `accesswatch/qs-proposal`.
 2. Run **Pilot Accessibility Scan (Quickstart + GLOW)**.
 3. Review created issues.
-4. Run **Dashboard Refresh**.
-5. Open `dashboard/index.html` (or publish via GitHub Pages).
+4. Run **PR Check-in Accessibility Simulation** to test CI-style behavior.
+5. Run **Dashboard Refresh**.
+6. Open `dashboard/index.html` (or publish via GitHub Pages).
+
+## How to simulate PR flow end-to-end
+
+1. Create a short-lived branch in this repo and open a PR.
+2. Confirm `PR Check-in Accessibility Simulation` runs automatically.
+3. For manual simulation, run the workflow with:
+   - `target_url` = preview/staging/live rendered endpoint
+   - `non_blocking` = `true` first, then `false` for gate rehearsal
+4. Review run summary + filed issues.
+5. Use this to tune rule thresholds and blocking policy before upstream rollout.
 
 ## Pilot tuning knobs
 

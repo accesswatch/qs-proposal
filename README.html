@@ -69,6 +69,14 @@
 1. Discovers URLs.
 2. Scans discovered URLs with <code>github/accessibility-scanner@v3</code>.
 3. Files findings to <code>accesswatch/qs-proposal</code> issues.</p>
+<h3 id="prcheck-in-simulation-workflow">PR/check-in simulation workflow</h3>
+<p>File: <code>.github/workflows/pr-checkin-simulation.yml</code></p>
+<p>This covers CI-style pre-merge behavior:
+1. Runs on <code>pull_request</code> and <code>workflow_dispatch</code>.
+2. Discovers URLs from a target rendered endpoint.
+3. Runs scanner with non-blocking or enforced mode.
+4. Publishes a step summary showing target, URL count, mode, and outcome.</p>
+<p>Default PR target is <code>https://quickstart.arizona.edu</code>, and workflow-dispatch lets you pass any preview/staging URL.</p>
 <h3 id="dashboard-refresh-workflow">Dashboard refresh workflow</h3>
 <p>File: <code>.github/workflows/dashboard-refresh.yml</code></p>
 <ol>
@@ -91,8 +99,19 @@
 <li>Open <strong>Actions</strong> in <code>accesswatch/qs-proposal</code>.</li>
 <li>Run <strong>Pilot Accessibility Scan (Quickstart + GLOW)</strong>.</li>
 <li>Review created issues.</li>
+<li>Run <strong>PR Check-in Accessibility Simulation</strong> to test CI-style behavior.</li>
 <li>Run <strong>Dashboard Refresh</strong>.</li>
 <li>Open <code>dashboard/index.html</code> (or publish via GitHub Pages).</li>
+</ol>
+<h2 id="how-to-simulate-pr-flow-end-to-end">How to simulate PR flow end-to-end</h2>
+<ol>
+<li>Create a short-lived branch in this repo and open a PR.</li>
+<li>Confirm <code>PR Check-in Accessibility Simulation</code> runs automatically.</li>
+<li>For manual simulation, run the workflow with:</li>
+<li><code>target_url</code> = preview/staging/live rendered endpoint</li>
+<li><code>non_blocking</code> = <code>true</code> first, then <code>false</code> for gate rehearsal</li>
+<li>Review run summary + filed issues.</li>
+<li>Use this to tune rule thresholds and blocking policy before upstream rollout.</li>
 </ol>
 <h2 id="pilot-tuning-knobs">Pilot tuning knobs</h2>
 <p>In <code>.github/workflows/pilot-scan.yml</code>, adjust:

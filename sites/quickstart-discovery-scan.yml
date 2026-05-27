@@ -26,8 +26,8 @@ jobs:
             /user/
             /admin/
             \?page=
-          max_depth: 2
-          max_urls: 300
+          max_depth: 1
+          max_urls: 150
           crawl_enabled: true
 
       - name: Scan discovered URLs

@@ -23,8 +23,8 @@ jobs:
           exclude_url_patterns: |
             /wp-admin/
             \?replytocom=
-          max_depth: 2
-          max_urls: 350
+          max_depth: 1
+          max_urls: 120
           crawl_enabled: true
 
       - name: Scan discovered URLs
