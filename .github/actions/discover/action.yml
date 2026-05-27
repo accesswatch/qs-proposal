@@ -1,0 +1,72 @@
+name: 'Discover'
+description: 'Discovers URLs from sitemaps, CMS adapters, and bounded crawling to build scanner inputs.'
+
+inputs:
+  seed_urls:
+    description: 'Newline-delimited seed URLs for crawling and default domain allow-list derivation.'
+    required: false
+    multiline: true
+  sitemap_urls:
+    description: 'Newline-delimited sitemap or sitemap index URLs to ingest.'
+    required: false
+    multiline: true
+  drupal_routes_url:
+    description: 'Optional Drupal JSON endpoint for published route/content discovery.'
+    required: false
+  wordpress_base_url:
+    description: 'Optional WordPress REST base URL (for example: https://example.com/wp-json/wp/v2).'
+    required: false
+  include_domains:
+    description: 'Optional newline-delimited hostname allow-list. Defaults to seed/sitemap domains when omitted.'
+    required: false
+    multiline: true
+  exclude_url_patterns:
+    description: 'Optional newline-delimited regex patterns; matching URLs are excluded.'
+    required: false
+    multiline: true
+  max_depth:
+    description: 'Maximum crawl depth from seed URLs.'
+    required: false
+    default: '2'
+  max_urls:
+    description: 'Maximum number of discovered URLs emitted.'
+    required: false
+    default: '500'
+  max_sitemap_files:
+    description: 'Maximum sitemap files to fetch recursively from sitemap indexes.'
+    required: false
+    default: '50'
+  max_wordpress_pages:
+    description: 'Maximum paginated requests per WordPress collection endpoint.'
+    required: false
+    default: '20'
+  request_timeout_ms:
+    description: 'HTTP request timeout in milliseconds.'
+    required: false
+    default: '10000'
+  crawl_enabled:
+    description: 'Whether to perform bounded crawling from seed URLs.'
+    required: false
+    default: 'true'
+  user_agent:
+    description: 'User-Agent header for discovery requests.'
+    required: false
+    default: 'accessibility-scanner-discover/1.0'
+
+outputs:
+  url_configs:
+    description: 'Stringified JSON array of URL config objects compatible with accessibility-scanner input `url_configs`.'
+  url_configs_file:
+    description: 'Path to JSON file containing URL config objects.'
+  urls:
+    description: 'Newline-delimited list of discovered URLs.'
+  count:
+    description: 'Count of discovered URLs.'
+
+runs:
+  using: 'node24'
+  main: 'bootstrap.js'
+
+branding:
+  icon: 'globe'
+  color: 'blue'

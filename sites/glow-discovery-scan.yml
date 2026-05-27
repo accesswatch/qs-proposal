@@ -1,0 +1,39 @@
+name: GLOW Discovery + Accessibility Scan
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 13 * * 1'
+
+jobs:
+  discover_and_scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discover URLs (GLOW)
+        id: discover
+        uses: github/accessibility-scanner/.github/actions/discover@v3
+        with:
+          seed_urls: |
+            https://www.letitglow.app
+          sitemap_urls: |
+            https://www.letitglow.app/sitemap.xml
+          include_domains: |
+            www.letitglow.app
+            letitglow.app
+          exclude_url_patterns: |
+            /wp-admin/
+            \?replytocom=
+          max_depth: 2
+          max_urls: 350
+          crawl_enabled: true
+
+      - name: Scan discovered URLs
+        uses: github/accessibility-scanner@v3
+        with:
+          url_configs: ${{ steps.discover.outputs.url_configs }}
+          repository: community-access/glow
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: glow-production.json
+          include_screenshots: true
+          open_grouped_issues: true
+          scans: '["axe", "reflow-scan"]'

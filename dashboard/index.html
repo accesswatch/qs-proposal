@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QS Proposal Dashboard (Mock)</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif; margin: 0; background: #f6f8fa; color: #1f2328; }
+    header { background: #0b3d91; color: #fff; padding: 16px 24px; }
+    main { max-width: 1200px; margin: 20px auto; padding: 0 16px; }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .card { background: #fff; border: 1px solid #d0d7de; border-radius: 8px; padding: 12px; }
+    .label { font-size: 12px; color: #57606a; margin-bottom: 6px; }
+    .value { font-size: 28px; font-weight: 700; }
+    h2 { margin: 20px 0 8px; font-size: 18px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #d0d7de; }
+    th, td { border-bottom: 1px solid #d8dee4; padding: 8px 10px; text-align: left; }
+    th { background: #f6f8fa; font-size: 13px; }
+    .spark { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; background: #fff; border: 1px solid #d0d7de; border-radius: 8px; padding: 12px; }
+    .note { font-size: 13px; color: #57606a; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 style="margin:0;font-size:22px;">Quickstart Accessibility Dashboard (Mock)</h1>
+    <div style="opacity:.9;">Executive preview of trends, risk concentration, and remediation progress</div>
+  </header>
+  <main>
+    <section class="grid" id="summary"></section>
+
+    <h2>90-Day Trend (Mock)</h2>
+    <div class="spark" id="trend"></div>
+
+    <h2>Top Violations</h2>
+    <table>
+      <thead><tr><th>Rule ID</th><th>Open Findings</th></tr></thead>
+      <tbody id="violations"></tbody>
+    </table>
+
+    <h2>Site Scorecard</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Site</th><th>Critical</th><th>Serious</th><th>Moderate</th><th>Minor</th>
+        </tr>
+      </thead>
+      <tbody id="scorecard"></tbody>
+    </table>
+
+    <p class="note">This is a non-production mock dashboard for proposal review only. Data source: <code>dashboard/data/sample-metrics.json</code></p>
+  </main>
+
+  <script>
+    async function load() {
+      const res = await fetch('./data/sample-metrics.json');
+      const data = await res.json();
+
+      const cards = [
+        ['Health Score', data.summary.healthScore],
+        ['Open Issues', data.summary.openIssues],
+        ['High-Impact Open', data.summary.highImpactOpen],
+        ['Regression Rate', (data.summary.regressionRate * 100).toFixed(1) + '%'],
+        ['MTTR (days)', data.summary.mttrDays]
+      ];
+      document.getElementById('summary').innerHTML = cards.map(([k, v]) =>
+        `<div class="card"><div class="label">${k}</div><div class="value">${v}</div></div>`
+      ).join('');
+
+      const trendLines = data.trend90d.map(p => `${p.period.padEnd(3)} | Open ${String(p.openIssues).padStart(3)} | Closed ${String(p.closedIssues).padStart(3)}`);
+      document.getElementById('trend').textContent = trendLines.join('\n');
+
+      document.getElementById('violations').innerHTML = data.topViolations
+        .map(v => `<tr><td>${v.ruleId}</td><td>${v.count}</td></tr>`).join('');
+
+      document.getElementById('scorecard').innerHTML = data.siteScorecard
+        .map(s => `<tr><td>${s.site}</td><td>${s.critical}</td><td>${s.serious}</td><td>${s.moderate}</td><td>${s.minor}</td></tr>`)
+        .join('');
+    }
+    load();
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "discover",
+  "version": "1.0.0",
+  "description": "Discovers scan URLs from sitemaps, CMS endpoints, and bounded crawling.",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "scripts": {
+    "start": "node bootstrap.js",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "GitHub",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@actions/core": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.0",
+    "typescript": "^6.0.3"
+  }
+}

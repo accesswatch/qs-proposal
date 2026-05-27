@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>todo</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #1f2328; }
+    h1,h2,h3 { line-height: 1.25; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre { background: #f6f8fa; padding: 12px; overflow-x: auto; border-radius: 6px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #d0d7de; padding: 6px 10px; text-align: left; }
+    th { background: #f6f8fa; }
+    a { color: #0969da; }
+  </style>
+</head>
+<body>
+<h1 id="todo">Todo</h1>
+<h2 id="definitive-execution-order-both-paths-covered">Definitive Execution Order (Both Paths Covered)</h2>
+<h3 id="1-foundation-setup-week-0-1">1) Foundation Setup (Week 0-1)</h3>
+<ul>
+<li>[ ] Create fine-grained PAT (<code>GH_TOKEN</code>) with write access to <code>accesswatch/az_quickstart</code> (contents, issues, pull-requests, metadata) and <code>accesswatch/azaccess</code> (contents)</li>
+<li>[ ] Add <code>GH_TOKEN</code> as a repository secret in <code>accesswatch/azaccess</code></li>
+<li>[ ] Add/confirm scanner workflow in <code>accesswatch/azaccess/.github/workflows/az-quickstart-scan.yml</code></li>
+<li>[ ] Enable scanner dedup/noise controls: <code>cache_key</code>, <code>open_grouped_issues: true</code>, <code>include_screenshots: true</code></li>
+<li>[ ] Confirm <code>skip_copilot_assignment</code> policy (<code>true</code> for manual triage flow, <code>false</code> if Copilot assignment desired)</li>
+</ul>
+<h3 id="2-live-site-discovery-and-coverage-week-1-3">2) Live-Site Discovery and Coverage (Week 1-3)</h3>
+<ul>
+<li>[ ] Build URL inventory seed set (homepage, nav hubs, forms, search, contact, news/event detail pages)</li>
+<li>[ ] Import and review <code>sitemap.xml</code> URLs into <code>url_configs</code></li>
+<li>[ ] Add automated discovery workflow: sitemap ingest + route export + seed crawl + dedupe/canonicalization</li>
+<li>[ ] Publish versioned <code>url_configs</code> artifact for scanner jobs</li>
+<li>[ ] Add top analytics pages (top 100-200 monthly) to URL inventory</li>
+<li>[ ] Add template coverage set so each major Quickstart component appears at least once</li>
+<li>[ ] Maintain curated critical-journey URL supplement (forms/search/authenticated/high-risk flows)</li>
+<li>[ ] Add <code>excludeSelectors</code> for known third-party noise per URL in <code>url_configs</code></li>
+<li>[ ] Run first full live scan and review filed issues in <code>accesswatch/az_quickstart</code></li>
+<li>[ ] Run second full live scan to verify deduplication (no duplicate re-filing)</li>
+<li>[ ] Configure discovery quality gates (coverage ratio, freshness, churn alerts, scanability failures)</li>
+<li>[ ] Pilot discovery + scan workflow against GLOW (<code>community-access/glow</code>, <code>https://www.letitglow.app</code>)</li>
+</ul>
+<h3 id="3-prcheck-in-ci-path-axe-core-first-non-blocking-start-week-2-5">3) PR/Check-In CI Path (Axe-core First, Non-Blocking Start) (Week 2-5)</h3>
+<ul>
+<li>[ ] Add PR accessibility workflow to <code>az-digital/az_quickstart</code> targeting preview/build output with Axe-core</li>
+<li>[ ] Select primary CI target pattern: preview URL, local clone in CI, or private staged clone with auth</li>
+<li>[ ] Stage A: set non-blocking mode (<code>continue-on-error: true</code>) and post PR summary comments</li>
+<li>[ ] Define triage labels and ownership (<code>a11y-reviewed</code>, <code>a11y-exception</code>, severity + component labels)</li>
+<li>[ ] Stage B: keep non-blocking but require triage on serious/critical findings</li>
+<li>[ ] Stage C: enable targeted blocking for agreed high-impact rules only</li>
+<li>[ ] Document temporary exception process with expiry date and owner</li>
+</ul>
+<h3 id="4-cadence-and-operations-ongoing">4) Cadence and Operations (Ongoing)</h3>
+<ul>
+<li>[ ] PR open/update: run Axe-core CI checks (non-blocking initially)</li>
+<li>[ ] Push to <code>main</code>: run smoke live scan on key URLs</li>
+<li>[ ] Nightly: run full live-site inventory scan</li>
+<li>[ ] Weekly: run triage review (new issues, regressions, repeat patterns, exceptions)</li>
+<li>[ ] Weekly: run URL discovery QA review (coverage, churn, failed URLs)</li>
+<li>[ ] Weekly: split triage by ownership lane (content editor vs site builder/dev)</li>
+<li>[ ] Monthly: publish leadership summary with trends, risk, and throughput</li>
+<li>[ ] Monthly: include Campus Web Services + Arizona Digital governance review and escalations</li>
+<li>[ ] Monthly: run executive recheck review of persistent/reopened high-impact issues and exception aging</li>
+<li>[ ] Quarterly: review and recalibrate blocking rule set, exception SLAs, and dashboard KPIs</li>
+</ul>
+<h3 id="5-dashboard-program-amazing-but-practical-week-4">5) Dashboard Program (Amazing but Practical) (Week 4+)</h3>
+<ul>
+<li>[ ] Phase A: Executive scorecard (health score, trendline, top violations, high-impact backlog)</li>
+<li>[ ] Phase B: Engineering drilldowns (component heat map, regression radar, exception debt tracker)</li>
+<li>[ ] Phase C: Training insights (team learning feed, accepted fix patterns, before/after examples)</li>
+<li>[ ] Phase D: Automation (weekly JSON snapshots, monthly reporting export)</li>
+<li>[ ] Publish dashboard via GitHub Pages from historical JSON snapshots and GitHub API aggregates</li>
+<li>[ ] Finalize dashboard data schema columns (issue lifecycle, recheck status, ownership, traffic, fix outcomes)</li>
+</ul>
+<h3 id="6-learning-upstream-improvement-loop-week-6">6) Learning + Upstream Improvement Loop (Week 6+)</h3>
+<ul>
+<li>[ ] Build/maintain component pattern library from confirmed findings and accepted fixes</li>
+<li>[ ] Publish role-based training digest from top recurring issues (content and component tracks)</li>
+<li>[ ] Track Copilot fix acceptance rate (if using Copilot assignment)</li>
+<li>[ ] Contribute high-value component fixes upstream to <code>az-digital/az_quickstart</code></li>
+<li>[ ] Re-scan post-merge to verify regressions do not return</li>
+</ul>
+<h3 id="7-u-of-a-process-and-support-alignment">7) U of A Process and Support Alignment</h3>
+<ul>
+<li>[ ] Add role ownership labels (<code>owner:content-editor</code>, <code>owner:site-builder</code>, <code>owner:dev</code>) to issue workflow</li>
+<li>[ ] Map accessibility issue types to Quickstart workshop tracks (Content Editor vs Site Builder)</li>
+<li>[ ] Document ServiceNow escalation flow for platform blockers and approved exceptions (<code>https://web.arizona.edu/help</code>)</li>
+</ul>
+</body>
+</html>

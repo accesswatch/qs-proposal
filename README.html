@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>README</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #1f2328; }
+    h1,h2,h3 { line-height: 1.25; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre { background: #f6f8fa; padding: 12px; overflow-x: auto; border-radius: 6px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #d0d7de; padding: 6px 10px; text-align: left; }
+    th { background: #f6f8fa; }
+    a { color: #0969da; }
+  </style>
+</head>
+<body>
+<h1 id="ai-powered-accessibility-scanner">AI-powered Accessibility Scanner</h1>
+<p>The AI-powered Accessibility Scanner (a11y scanner) is a GitHub Action that detects accessibility barriers across your digital products, creates trackable issues, and leverages GitHub Copilot for AI-powered fixes.</p>
+<p>The a11y scanner helps teams:</p>
+<ul>
+<li>🔍 Scan websites, repositories, and dynamic content for accessibility issues</li>
+<li>📝 Create actionable GitHub issues that can be assigned to GitHub Copilot</li>
+<li>🤖 Propose fixes with GitHub Copilot, with humans reviewing before merging</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>Note:</strong> The a11y scanner is currently in public preview. Feature development work is still ongoing. It can help identify accessibility gaps but cannot guarantee fully accessible code suggestions. Always review before merging!</p>
+</blockquote>
+<p>🎥 <strong><a href="https://youtu.be/CvRJcEzCSQM">Watch the demo video</a></strong> to see the a11y scanner in action.</p>
+<hr />
+<h2 id="frequently-asked-questions-faq"><a href="FAQ.md">Frequently-Asked Questions (FAQ)</a></h2>
+<h2 id="requirements">Requirements</h2>
+<p>To use the a11y scanner, you'll need:</p>
+<ul>
+<li><strong>GitHub Actions</strong> enabled in your repository</li>
+<li><strong>GitHub Issues</strong> enabled in your repository</li>
+<li><strong>Available GitHub Actions minutes</strong> for your account</li>
+<li><strong>Admin access</strong> to add repository secrets</li>
+<li><strong>GitHub Copilot</strong> (optional) - The a11y scanner works without GitHub Copilot and will still create issues for accessibility findings. However, without GitHub Copilot, you won't be able to automatically assign issues to GitHub Copilot for AI-powered fix suggestions and PR creation.</li>
+</ul>
+<h2 id="getting-started">Getting started</h2>
+<h3 id="1-add-a-workflow-file">1. Add a workflow file</h3>
+<p>Create a workflow file in <code>.github/workflows/</code> (e.g., <code>a11y-scan.yml</code>) in your repository:</p>
+<pre><code class="language-yaml">name: Accessibility Scanner
+on: workflow_dispatch # This configures the workflow to run manually, instead of (e.g.) automatically in every PR. Check out https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#on for more options.
+
+jobs:
+  accessibility_scanner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: github/accessibility-scanner@v3
+        with:
+          urls: | # Provide a newline-delimited list of URLs to scan; more information below.
+            REPLACE_THIS
+          repository: REPLACE_THIS/REPLACE_THIS # Provide a repository name-with-owner (in the format &quot;primer/primer-docs&quot;). This is where issues will be filed and where Copilot will open PRs; more information below.
+          token: ${{ secrets.GH_TOKEN }} # This token must have write access to the repo above (contents, issues, and PRs); more information below. Note: GitHub Actions' GITHUB_TOKEN cannot be used here.
+          cache_key: REPLACE_THIS # Provide a filename that will be used when caching results. We recommend including the name or domain of the site being scanned.
+          # base_url: https://REPLACE_THIS # Optional: GitHub API base URL to pass into Octokit (required for GitHub Enterprise Server)
+          # login_url: # Optional: URL of the login page if authentication is required
+          # username: # Optional: Username for authentication
+          # password: ${{ secrets.PASSWORD }} # Optional: Password for authentication (use secrets!)
+          # auth_context: # Optional: Stringified JSON object for complex authentication
+          # skip_copilot_assignment: false # Optional: Set to true to skip assigning issues to GitHub Copilot (or if you don't have GitHub Copilot)
+          # include_screenshots: false # Optional: Set to true to capture screenshots and include links to them in filed issues
+          # open_grouped_issues: false # Optional: Set to true to open an issue grouping individual issues per violation
+          # reduced_motion: no-preference # Optional: Playwright reduced motion configuration option
+          # color_scheme: light # Optional: Playwright color scheme configuration option
+          # scans: '[&quot;axe&quot;,&quot;reflow-scan&quot;]' # Optional: An array of scans (or plugins) to be performed. If not provided, only Axe will be performed.
+          # url_configs: '[{&quot;url&quot;:&quot;https://example.com&quot;,&quot;excludeSelectors&quot;:[&quot;iframe&quot;,&quot;#widget&quot;]}]' # Optional: Per-URL config with CSS selectors to exclude from the Axe scan. When provided, takes precedence over 'urls'.
+</code></pre>
+<blockquote>
+<p>👉 Update all <code>REPLACE_THIS</code> placeholders with your actual values. See <a href="#action-inputs">Action Inputs</a> for details.</p>
+</blockquote>
+<p><strong>Required permissions:</strong></p>
+<ul>
+<li>Write access to add or update workflows</li>
+<li>Admin access to add repository secrets</li>
+</ul>
+<p>📚 Learn more</p>
+<ul>
+<li><a href="https://docs.github.com/en/actions/get-started/quickstart">Quickstart for GitHub Actions</a></li>
+<li><a href="https://docs.github.com/en/actions/get-started/understand-github-actions">Understanding GitHub Actions</a></li>
+<li><a href="https://docs.github.com/en/actions/how-tos/write-workflows">Writing workflows</a></li>
+<li><a href="https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository">Managing GitHub Actions settings</a></li>
+<li><a href="https://docs.github.com/en/billing/concepts/product-billing/github-actions">GitHub Actions billing</a></li>
+</ul>
+<hr />
+<h3 id="2-create-a-token-and-add-a-secret">2. Create a token and add a secret</h3>
+<p>The a11y scanner requires a Personal Access Token (PAT) as a repository secret:</p>
+<p><strong>The <code>GH_TOKEN</code> is a fine-grained PAT with:</strong></p>
+<ul>
+<li><code>actions: write</code></li>
+<li><code>contents: write</code></li>
+<li><code>issues: write</code></li>
+<li><code>pull-requests: write</code></li>
+<li><code>metadata: read</code></li>
+<li><strong>Scope:</strong> Your target repository (where issues and PRs will be created) and the repository containing your workflow</li>
+</ul>
+<blockquote>
+<p>👉 GitHub Actions' default <a href="https://docs.github.com/en/actions/tutorials/authenticate-with-github_token">GITHUB_TOKEN</a> cannot be used here.</p>
+</blockquote>
+<p>📚 Learn more</p>
+<ul>
+<li><a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token">Creating a fine-grained PAT</a></li>
+<li><a href="https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets#creating-secrets-for-a-repository">Creating repository secrets</a></li>
+</ul>
+<hr />
+<h3 id="3-run-your-first-scan">3. Run your first scan</h3>
+<p>Trigger the workflow manually or automatically based on your configuration. The a11y scanner will run and create issues for any accessibility findings. When issues are assigned to GitHub Copilot, always review proposed fixes before merging.</p>
+<p>📚 Learn more</p>
+<ul>
+<li><a href="https://docs.github.com/en/actions/how-tos/monitor-workflows/view-workflow-run-history">View workflow run history</a></li>
+<li><a href="https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow#running-a-workflow">Running a workflow manually</a></li>
+<li><a href="https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs">Re-run workflows and jobs</a></li>
+</ul>
+<hr />
+<h2 id="action-inputs">Action inputs</h2>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Required</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>urls</code></td>
+<td>No*</td>
+<td>Newline-delimited list of URLs to scan. Required unless <code>url_configs</code> is provided.</td>
+<td><code>https://primer.style</code><br><code>https://primer.style/octicons</code></td>
+</tr>
+<tr>
+<td><code>repository</code></td>
+<td>Yes</td>
+<td>Repository (with owner) for issues and PRs</td>
+<td><code>primer/primer-docs</code></td>
+</tr>
+<tr>
+<td><code>token</code></td>
+<td>Yes</td>
+<td>PAT with write permissions (see above)</td>
+<td><code>${{ secrets.GH_TOKEN }}</code></td>
+</tr>
+<tr>
+<td><code>cache_key</code></td>
+<td>Yes</td>
+<td>Key for caching results across runs<br>Allowed: <code>A-Za-z0-9._/-</code></td>
+<td><code>cached_results-primer.style-main.json</code></td>
+</tr>
+<tr>
+<td><code>base_url</code></td>
+<td>No</td>
+<td>GitHub API base URL used by Octokit. Set this for GitHub Enterprise Server (format: <code>https://HOSTNAME/api/v3</code>). Defaults to <code>https://api.github.com</code></td>
+<td><code>https://ghe.example.com/api/v3</code></td>
+</tr>
+<tr>
+<td><code>login_url</code></td>
+<td>No</td>
+<td>If scanned pages require authentication, the URL of the login page</td>
+<td><code>https://github.com/login</code></td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td>No</td>
+<td>If scanned pages require authentication, the username to use for login</td>
+<td><code>some-user</code></td>
+</tr>
+<tr>
+<td><code>password</code></td>
+<td>No</td>
+<td>If scanned pages require authentication, the password to use for login</td>
+<td><code>${{ secrets.PASSWORD }}</code></td>
+</tr>
+<tr>
+<td><code>auth_context</code></td>
+<td>No</td>
+<td>If scanned pages require authentication, a stringified JSON object containing username, password, cookies, and/or localStorage from an authenticated session</td>
+<td><code>{"username":"some-user","password":"***","cookies":[...]}</code></td>
+</tr>
+<tr>
+<td><code>skip_copilot_assignment</code></td>
+<td>No</td>
+<td>Whether to skip assigning filed issues to GitHub Copilot. Set to <code>true</code> if you don't have GitHub Copilot or prefer to handle issues manually</td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><code>include_screenshots</code></td>
+<td>No</td>
+<td>Whether to capture screenshots of scanned pages and include links to them in filed issues. Screenshots are stored on the <code>gh-cache</code> branch of the repository running the workflow. Default: <code>false</code></td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><code>open_grouped_issues</code></td>
+<td>No</td>
+<td>Whether to create a tracking issue which groups filed issues together by violation type. Default: <code>false</code></td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><code>reduced_motion</code></td>
+<td>No</td>
+<td>Playwright <code>reducedMotion</code> setting for scan contexts. Allowed values: <code>reduce</code>, <code>no-preference</code></td>
+<td><code>reduce</code></td>
+</tr>
+<tr>
+<td><code>color_scheme</code></td>
+<td>No</td>
+<td>Playwright <code>colorScheme</code> setting for scan contexts. Allowed values: <code>light</code>, <code>dark</code>, <code>no-preference</code></td>
+<td><code>dark</code></td>
+</tr>
+<tr>
+<td><code>scans</code></td>
+<td>No</td>
+<td>An array of scans (or plugins) to be performed. If not provided, only Axe will be performed.</td>
+<td><code>'["axe", "reflow-scan", ...other plugins]'</code></td>
+</tr>
+<tr>
+<td><code>url_configs</code></td>
+<td>No</td>
+<td>A stringified JSON array of URL config objects. Each object must have a <code>url</code> field and may have an optional <code>excludeSelectors</code> field (array of CSS selectors to exclude from the Axe scan for that URL). When provided, takes precedence over the <code>urls</code> input.</td>
+<td><code>'[{"url":"https://example.com","excludeSelectors":["iframe","#widget"]}]'</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="optional-automated-url-discovery-crawl-cms-adapters">Optional: Automated URL discovery (crawl + CMS adapters)</h2>
+<p>If you do not want to maintain a fully manual URL list, use the discovery action to build scanner inputs from:
+- sitemap files,
+- optional Drupal route JSON endpoints,
+- optional WordPress REST endpoints,
+- bounded crawling from seed URLs.</p>
+<pre><code class="language-yaml">- id: discover
+  uses: github/accessibility-scanner/.github/actions/discover@v3
+  with:
+    seed_urls: |
+      https://www.letitglow.app
+    sitemap_urls: |
+      https://www.letitglow.app/sitemap.xml
+    max_depth: 2
+    max_urls: 300
+
+- uses: github/accessibility-scanner@v3
+  with:
+    url_configs: ${{ steps.discover.outputs.url_configs }}
+    repository: community-access/glow
+    token: ${{ secrets.GH_TOKEN }}
+    cache_key: glow-production.json
+</code></pre>
+<p>See <code>/.github/actions/discover/README.md</code> and <code>sites/glow-discovery-scan.yml</code> for complete examples.</p>
+<hr />
+<h2 id="authentication">Authentication</h2>
+<p>If access to a page requires logging-in first, and logging-in requires only a username and password, then provide the <code>login_url</code>, <code>username</code>, and <code>password</code> inputs.</p>
+<p>If your login flow is more complex—if it requires two-factor authentication, single sign-on, passkeys, etc.—and you have a custom action that <a href="https://playwright.dev/docs/auth">authenticates with Playwright</a> and persists authenticated session state to a file, then provide the <code>auth_context</code> input. (If <code>auth_context</code> is provided, <code>login_url</code>, <code>username</code>, and <code>password</code> will be ignored.)</p>
+<blockquote>
+<p>[!IMPORTANT]
+Don't put passwords in your workflow as plain text; instead reference a <a href="https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets#creating-secrets-for-a-repository">repository secret</a>.</p>
+</blockquote>
+<hr />
+<h2 id="configuring-github-copilot">Configuring GitHub Copilot</h2>
+<p>The a11y scanner leverages GitHub Copilot coding agent, which can be configured with custom instructions:</p>
+<ul>
+<li><strong>Repository-wide:</strong> <code>.github/copilot-instructions.md</code></li>
+<li><strong>Directory/file-scoped:</strong> <code>.github/instructions/*.instructions.md</code></li>
+</ul>
+<p>📚 Learn more</p>
+<ul>
+<li><a href="https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions">Adding repository custom instructions</a></li>
+<li><a href="https://accessibility.github.com/documentation/guide/copilot-instructions">Optimizing GitHub Copilot for accessibility</a></li>
+<li><a href="https://github.blog/changelog/2025-07-23-github-copilot-coding-agent-now-supports-instructions-md-custom-instructions/">GitHub Copilot .instructions.md support</a></li>
+<li><a href="https://github.blog/changelog/2025-08-28-copilot-coding-agent-now-supports-agents-md-custom-instructions">GitHub Copilot agents.md support</a></li>
+</ul>
+<hr />
+<h2 id="plugins">Plugins</h2>
+<p>See the <a href="https://github.com/github/accessibility-scanner/tree/main/PLUGINS.md">plugin docs</a> for more information</p>
+<hr />
+<h2 id="feedback">Feedback</h2>
+<p>💬 We welcome your feedback! To submit feedback or report issues, please create an issue in this repository. For more information on contributing, please refer to the <a href="./CONTRIBUTING.md">CONTRIBUTING</a> file.</p>
+<h2 id="how-we-decide-what-to-build-next">How We Decide What to Build Next</h2>
+<p>We love hearing ideas and suggestions from the community — your feedback genuinely helps shape our thinking. That said, we want to be upfront: <strong>there's no guarantee that any specific feature request will be implemented.</strong></p>
+<p>Our team prioritizes upcoming work based on a number of factors, including:</p>
+<ul>
+<li>Alignment with the Action's core mission (website accessibility scanning)</li>
+<li>The complexity and scope of the work involved</li>
+<li>How many users would benefit from the change</li>
+<li>Our current bandwidth and roadmap commitments</li>
+</ul>
+<p>We read every suggestion and appreciate the time people take to share them. Even if we can't act on a request right away (or at all), it still helps us understand what matters most to the people using this tool. So please keep the ideas coming — just know that we can't make promises about what will or won't ship.</p>
+<hr />
+<h2 id="license">License</h2>
+<p>📄 This project is licensed under the terms of the MIT open source license. Please refer to the <a href="./LICENSE">LICENSE</a> file for the full terms.</p>
+<h2 id="maintainers">Maintainers</h2>
+<p>🔧 Please refer to the <a href="./.github/CODEOWNERS">CODEOWNERS</a> file for more information.</p>
+<h2 id="support">Support</h2>
+<p>❓ Please refer to the <a href="./SUPPORT.md">SUPPORT</a> file for more information.</p>
+<h2 id="acknowledgement">Acknowledgement</h2>
+<p>✨ Thank you to our beta testers for their help with making this project!</p>
+</body>
+</html>

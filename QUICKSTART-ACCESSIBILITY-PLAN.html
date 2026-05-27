@@ -1,0 +1,1651 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QUICKSTART-ACCESSIBILITY-PLAN</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #1f2328; }
+    h1,h2,h3 { line-height: 1.25; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre { background: #f6f8fa; padding: 12px; overflow-x: auto; border-radius: 6px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #d0d7de; padding: 6px 10px; text-align: left; }
+    th { background: #f6f8fa; }
+    a { color: #0969da; }
+  </style>
+</head>
+<body>
+<h1 id="arizona-quickstart-accessibility-scanner-strategic-implementation-plan">Arizona Quickstart Accessibility Scanner — Strategic Implementation Plan</h1>
+<p><strong>Prepared for:</strong> University of Arizona Leadership<br />
+<strong>Prepared by:</strong> Jeff Bishop (accesswatch), Digital Accessibility<br />
+<strong>Date:</strong> May 27, 2026<br />
+<strong>Version:</strong> 1.9<br />
+<strong>Status:</strong> Draft for Review</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>This plan recommends a <strong>definitive dual-track accessibility strategy</strong> for Arizona Quickstart:</p>
+<ol>
+<li><strong>Axe-core in CI (pre-merge):</strong> Run Axe-core checks on pull requests against rendered preview/build outputs to catch regressions before code lands.</li>
+<li><strong><code>github/accessibility-scanner@v3</code> on live URLs (post-merge + scheduled):</strong> Continuously scan real rendered pages in production/staging, file and deduplicate issues, and track trends over time.</li>
+</ol>
+<p>This is the highest-confidence model for a Drupal-based platform: <strong>CI prevents new defects; live scanning catches real-world/content/integration defects that source-only checks miss.</strong></p>
+<p>Both tracks require a <strong>rendered web target</strong> (preview URL, CI-hosted localhost clone, staging, or production URL). They do <strong>not</strong> require public production targets for every run.</p>
+<p>The scanner implementation provides:
+- Rendered-page scanning with axe-core + Playwright (Playwright opens real browser pages, executes page rendering/JS, and provides the DOM state Axe evaluates)
+- Automatic issue filing, grouping, and deduplication (<code>cache_key</code>, <code>open_grouped_issues</code>)
+- Optional Copilot issue assignment (not required)
+- Structured outputs (<code>results_file</code>) for dashboards, KPI tracking, and training insights</p>
+<p><strong>Executive outcome:</strong> Accessibility becomes an operational system, not a one-time audit — with measurable regression prevention, prioritized remediation, and leadership-ready trend reporting.</p>
+<p><strong>Execution principle:</strong> Start non-blocking in PR CI to establish signal quality, then move to targeted blocking on high-impact Axe-core rules while nightly live scans continue in parallel.</p>
+<p><strong>Dashboard plan (executive view):</strong> Publish a GitHub Pages dashboard fed by scanner <code>results_file</code> snapshots and GitHub Issues/PR metadata, delivered in four phases:
+1. <strong>Executive scorecard:</strong> Health score, 30/60/90-day trends, top violations, high-impact backlog.
+2. <strong>Engineering drilldowns:</strong> Component heat map, regression radar, exception debt tracking.
+3. <strong>Training and awareness:</strong> "What we learned" feed, accepted fix patterns, before/after examples.
+4. <strong>Operational automation:</strong> Weekly snapshot generation plus monthly leadership reporting packets.</p>
+<p>This dashboard is designed to answer three leadership questions every month: <strong>Are we improving, where is risk concentrated, and what fixes are working across teams?</strong></p>
+<p><strong>Strategic checkpoint (executive recheck):</strong> Recheck status of previously identified high-impact issues at the executive monthly review, including reopened findings and unresolved exceptions, so "known risk" stays visible until fixed or formally accepted.</p>
+<p><strong>Executive quick links (details below):</strong>
+- <a href="#21-dual-track-coverage-model-both-paths">Dual-track strategy and operating model</a>
+- <a href="#automated-url-discovery-pipeline-recommended">URL discovery automation pipeline</a>
+- <a href="#ci-execution-topology-clone-vs-deployed-target">CI topology: preview vs clone vs deployed target</a>
+- <a href="#6-deduplication-and-noise-reduction">Deduplication and recheck behavior</a>
+- <a href="#operational-cadence-recommended">Operational cadence and executive recheck</a>
+- <a href="#7-dashboard-and-metrics">Dashboard panels and metrics</a>
+- <a href="#dashboard-data-model-recommended-columns">Dashboard data columns/model</a></p>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#1-current-state">Current State</a></li>
+<li><a href="#2-strategic-goals">Strategic Goals</a></li>
+<li><a href="#3-architecture-overview">Architecture Overview</a></li>
+<li><a href="#4-test-case-proof-of-concept">Test Case: Proof of Concept</a></li>
+<li><a href="#5-implementation-phases">Implementation Phases</a></li>
+<li><a href="#6-deduplication-and-noise-reduction">Deduplication and Noise Reduction</a></li>
+<li><a href="#7-dashboard-and-metrics">Dashboard and Metrics</a></li>
+<li><a href="#8-pattern-learning-strategy">Pattern Learning Strategy</a></li>
+<li><a href="#9-resource-requirements">Resource Requirements</a></li>
+<li><a href="#10-success-metrics-and-kpis">Success Metrics and KPIs</a></li>
+<li><a href="#11-risks-and-mitigations">Risks and Mitigations</a></li>
+<li><a href="#12-appendices">Appendices</a></li>
+</ol>
+<hr />
+<h2 id="1-current-state">1. Current State</h2>
+<h3 id="what-already-exists">What Already Exists</h3>
+<p>The University already has meaningful momentum:</p>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Location</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Working scanner workflow</td>
+<td><code>accesswatch/azaccess</code></td>
+<td>Scans prototype site nightly, on push, on PR</td>
+</tr>
+<tr>
+<td>Accessibility dashboard</td>
+<td><code>accesswatch/azaccess/docs/</code></td>
+<td>Published to GitHub Pages with trend history</td>
+</tr>
+<tr>
+<td>CI proposal document</td>
+<td><code>accesswatch/azaccess/ACCESSIBILITY-CI-PROPOSAL.md</code></td>
+<td>Multi-tool (axe/Lighthouse/Pa11y) CI strategy</td>
+</tr>
+<tr>
+<td>Quickstart fork</td>
+<td><code>accesswatch/az_quickstart</code></td>
+<td>Fork of <code>az-digital/az_quickstart</code> for experimentation</td>
+</tr>
+<tr>
+<td>Axe scan reports</td>
+<td><code>accesswatch/azaccess/scripts/axe-reports/</code></td>
+<td>Historical JSON reports from past scans</td>
+</tr>
+<tr>
+<td>Accessibility knowledge base</td>
+<td><code>accesswatch/azaccess</code></td>
+<td>Role-based guidance, checklists, WCAG crosswalk</td>
+</tr>
+</tbody>
+</table>
+<h3 id="what-the-scanner-catches-today">What the Scanner Catches Today</h3>
+<p>The existing <code>accesswatch/azaccess</code> scanner runs WCAG 2.2 AA checks and already captures real findings on the prototype site. The <code>azaccess</code> scans provide a learning baseline for what types of issues a Quickstart-based site produces.</p>
+<h3 id="the-gap">The Gap</h3>
+<p>The actual <code>az_quickstart</code> distribution and the sites it powers are not yet in the scanner's scope. This plan closes that gap.</p>
+<hr />
+<h2 id="2-strategic-goals">2. Strategic Goals</h2>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Goal</th>
+<th>Audience</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0</td>
+<td>Catch accessibility regressions before they reach production</td>
+<td>Developers, QA</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>Build a traceable, assignable issue backlog for all known violations</td>
+<td>Engineering, Product</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>Eliminate scan noise through intelligent deduplication</td>
+<td>All</td>
+</tr>
+<tr>
+<td>P3</td>
+<td>Surface patterns to inform component-level fixes in Quickstart itself</td>
+<td>Arizona Digital team</td>
+</tr>
+<tr>
+<td>P4</td>
+<td>Provide leadership with trend dashboards showing measurable improvement</td>
+<td>Leadership, Compliance</td>
+</tr>
+<tr>
+<td>P5</td>
+<td>Use GitHub Copilot to propose and merge code fixes, reviewed by humans</td>
+<td>Developers</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="21-dual-track-coverage-model-both-paths">2.1 Dual-Track Coverage Model (Both Paths)</h2>
+<p>To maximize coverage, run two complementary tracks in parallel:</p>
+<ol>
+<li><strong>PR/build CI track (Axe-core-first):</strong> Catch regressions before merge using Axe-core against PR previews or built artifacts.</li>
+<li><strong>Live-site track (<code>github/accessibility-scanner@v3</code>):</strong> Catch production-only and content-driven issues on real URLs over time.</li>
+</ol>
+<p><strong>Recommendation:</strong> Yes, Axe-core is the best primary signal on the CI side for fast, high-confidence regression detection. Keep Lighthouse/Pa11y as optional secondary lenses where needed, but do not block merges on those initially.</p>
+<hr />
+<h2 id="22-u-of-a-quickstart-business-process-alignment">2.2 U of A Quickstart Business Process Alignment</h2>
+<p>Reviewing core Quickstart documentation confirms this plan should include explicit role and support alignment:</p>
+<ol>
+<li><strong>Role-based operations are required:</strong> Quickstart distinguishes Content Editor vs Site Builder/Admin responsibilities. Findings should route to the right owner type, not a generic queue.</li>
+<li><strong>Training is part of execution, not optional:</strong> U of A already runs Content Editor and Site Builder workshops; scanner rollout should include training adoption checkpoints.</li>
+<li><strong>Support escalation path exists:</strong> Campus Web Services support requests route through ServiceNow (<code>web.arizona.edu/help</code>) with standard response handling.</li>
+<li><strong>Content workflow matters:</strong> Many accessibility defects are content-authoring issues (alt text, heading order, descriptive links, table misuse), so remediation must include editorial governance in addition to code fixes.</li>
+</ol>
+<h3 id="plan-adjustments-based-on-quickstart-fundamentals">Plan adjustments based on Quickstart fundamentals</h3>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Adjustment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Triage workflow</td>
+<td>Split ownership labels by role (<code>owner:content-editor</code>, <code>owner:site-builder</code>, <code>owner:dev</code>)</td>
+</tr>
+<tr>
+<td>Weekly operations</td>
+<td>Add role-specific triage lane: content defects to editors, component defects to dev/site builder</td>
+</tr>
+<tr>
+<td>Monthly governance</td>
+<td>Include Campus Web Services and Arizona Digital in monthly trend review + escalation queue</td>
+</tr>
+<tr>
+<td>Training loop</td>
+<td>Add required "top recurring errors" training digest sourced from dashboard trends</td>
+</tr>
+<tr>
+<td>Escalation process</td>
+<td>Route platform-level blockers and exceptions via ServiceNow request workflow</td>
+</tr>
+</tbody>
+</table>
+<p>This does not change the technical architecture; it strengthens execution by matching how U of A Quickstart teams actually work.</p>
+<hr />
+<h2 id="3-architecture-overview">3. Architecture Overview</h2>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────────┐
+│                         TRIGGER EVENTS                                       │
+│  PR Opened   Merge to Main   Nightly Cron   Tugboat Preview   Manual Dispatch│
+└──────────────────────┬───────────────────────────────────────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│              github/accessibility-scanner@v3 (GitHub Action)                 │
+│                                                                              │
+│  ┌─────────────────────┐   ┌──────────────────┐   ┌────────────────────────┐│
+│  │  Playwright Browser │   │   axe-core WCAG  │   │  cache_key lookup      ││
+│  │  Renders live URLs  │──▶│   2.2 AA Scan    │──▶│  (skip known issues)   ││
+│  └─────────────────────┘   └──────────────────┘   └───────────┬────────────┘│
+│                                                                │             │
+│                                               New finding?     │             │
+│                                                    ▼           │             │
+│                                       ┌────────────────────┐  │ Known issue │
+│                                       │  File GitHub Issue  │  │ → skip      │
+│                                       │  with full context  │  │             │
+│                                       └────────┬───────────┘  │             │
+│                                                │              │             │
+│                                    Has Copilot?│              │             │
+│                                                ▼              │             │
+│                                    ┌───────────────────────┐  │             │
+│                                    │ Assign to Copilot     │  │             │
+│                                    │ for fix suggestion    │  │             │
+│                                    └───────────────────────┘  │             │
+└──────────────────────────────────────────────────────────────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                    RESULTS OUTPUTS                                           │
+│                                                                              │
+│  GitHub Issues (labeled, assigned)   →  Issue Tracker / Sprint Board        │
+│  results_file JSON                   →  Dashboard / Trend Analysis          │
+│  Grouped Issues (open_grouped_issues) →  Violation-type tracking issues     │
+│  Screenshots (include_screenshots)   →  Visual evidence in issues           │
+└──────────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="two-repo-pattern">Two-Repo Pattern</h3>
+<p>A critical architectural decision is to <strong>separate the scanner infrastructure from the issue destination</strong>:</p>
+<pre><code>accesswatch/azaccess           accesswatch/az_quickstart
+(scanner lives here)           (issues filed here)
+        │                              │
+        │  github/accessibility-       │
+        │  scanner@v3 runs,            │
+        │  targets Quickstart URLs  ──▶│  GitHub Issues created
+        │                              │  with WCAG violation details
+        │  cache_key stored here       │  Assigned to Copilot
+        │  (deduplication)             │  Labels: a11y, wcag-2.2, component name
+</code></pre>
+<p>This is immediately achievable — the scanner's <code>repository</code> input points to any repo the token has write access to. No Drupal install required.</p>
+<hr />
+<h2 id="4-test-case-proof-of-concept">4. Test Case: Proof of Concept</h2>
+<h3 id="can-we-scan-quickstart-from-a-different-repo">Can we scan Quickstart from a different repo?</h3>
+<p><strong>Yes, absolutely.</strong> This is the recommended first step.</p>
+<h4 id="how-it-works">How it works</h4>
+<p>The <code>github/accessibility-scanner@v3</code> action:
+1. Takes a list of <strong>URLs</strong> to scan (not code files)
+2. Files issues in whichever <strong>repository</strong> you specify via the <code>repository</code> input
+3. The scanning workflow lives in repo A; the issues are filed in repo B</p>
+<h4 id="test-case-configuration">Test Case Configuration</h4>
+<p>Add this workflow to <code>accesswatch/azaccess</code> (already has secrets/infrastructure):</p>
+<pre><code class="language-yaml"># .github/workflows/az-quickstart-scan.yml
+name: AZ Quickstart Accessibility Scan
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 1'  # Monday mornings for learning reviews
+
+jobs:
+  scan_quickstart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: github/accessibility-scanner@v3
+        with:
+          urls: |
+            https://quickstart.arizona.edu
+            https://quickstart.arizona.edu/best-practices/accessibility-guidelines
+            https://quickstart.arizona.edu/create-content/editor-toolbar
+            https://quickstart.arizona.edu/get-started/overview
+            https://quickstart.arizona.edu/news
+          repository: accesswatch/az_quickstart
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: az-quickstart-public-scan.json
+          include_screenshots: true
+          open_grouped_issues: true
+          scans: '[&quot;axe&quot;, &quot;reflow-scan&quot;]'
+</code></pre>
+<h4 id="what-this-proves">What this proves</h4>
+<ul>
+<li>Scanner infrastructure works with Quickstart-based URLs</li>
+<li>Issues land correctly in the <code>az_quickstart</code> repo</li>
+<li>Deduplication cache prevents noise on repeated runs</li>
+<li>Grouped issues reveal pattern clusters (e.g., "color-contrast affects 12 pages")</li>
+<li>Zero Drupal installation required</li>
+</ul>
+<h4 id="expanding-the-url-set">Expanding the URL set</h4>
+<p>Once the initial scan runs, expand to real Quickstart-powered UA sites:</p>
+<pre><code class="language-yaml">urls: |
+  https://quickstart.arizona.edu
+  https://medicine.arizona.edu
+  https://eller.arizona.edu
+  https://capla.arizona.edu
+  https://science.arizona.edu
+  https://drc.arizona.edu
+  https://ischool.arizona.edu
+  https://law.arizona.edu
+</code></pre>
+<p>These are public-facing Quickstart sites. Scanning them reveals which accessibility patterns are systemic across the distribution vs. site-specific content problems.</p>
+<h4 id="url-inventory-strategy-important-scanner-does-not-crawl">URL inventory strategy (important: scanner does not crawl)</h4>
+<p>The scanner checks only the URLs you provide. To get near-complete coverage, maintain a curated URL inventory using this order:</p>
+<ol>
+<li><strong>Seed set:</strong> Homepage + primary navigation + top user journeys (apply, contact, forms, search, news/event detail pages).</li>
+<li><strong>Sitemap import:</strong> Pull all URLs from <code>sitemap.xml</code> and filter to indexable pages.</li>
+<li><strong>Template sampling:</strong> Ensure each Quickstart template/component appears in at least one scanned URL.</li>
+<li><strong>Analytics top pages:</strong> Add the top 100-200 pages by traffic each month.</li>
+<li><strong>Risk-based additions:</strong> Add pages with heavy JS widgets, forms, media players, and third-party embeds.</li>
+</ol>
+<p>Maintain this list in version control (<code>url_configs</code>) so coverage changes are reviewable over time.</p>
+<h4 id="automated-url-discovery-pipeline-recommended">Automated URL discovery pipeline (recommended)</h4>
+<p>To automate URL handoff into scanner runs, add a discovery job that builds <code>url_configs</code> before each scheduled scan:</p>
+<ol>
+<li>Ingest Drupal sitemap URLs (<code>sitemap.xml</code> and nested sitemap indexes).</li>
+<li>Pull published route/content exports from Drupal where available.</li>
+<li>Crawl from approved seed URLs (home, section hubs, key journeys) to discover linked pages.</li>
+<li>Merge, deduplicate, canonicalize, and filter (domain/path/query/filetype/noindex rules).</li>
+<li>Add curated high-risk URLs (forms, search states, authenticated user paths, third-party embed pages).</li>
+<li>Emit a versioned <code>url_configs</code> artifact for the scanner job to consume.</li>
+</ol>
+<p><strong>Important limit:</strong> no crawler will discover every meaningful page state automatically. Keep a curated "critical journey" supplement under source control.</p>
+<p><strong>Implementation now available in this repo:</strong> <code>/.github/actions/discover</code> (GitHub Action) with:
+- sitemap ingestion (including sitemap-index recursion),
+- optional Drupal route endpoint ingestion,
+- optional WordPress REST ingestion (<code>pages</code> + <code>posts</code>),
+- bounded seed crawl with depth/domain limits,
+- scanner-ready output (<code>url_configs</code>) for <code>github/accessibility-scanner@v3</code>.</p>
+<h4 id="discovery-quality-gates-what-else-belongs-in-this-plan">Discovery quality gates (what else belongs in this plan)</h4>
+<p>Treat URL discovery itself as a governed product with measurable quality:</p>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Coverage ratio</td>
+<td>&gt;= 90% of top-traffic pages represented in <code>url_configs</code></td>
+</tr>
+<tr>
+<td>Freshness</td>
+<td>Discovery artifact regenerated at least daily for production scans</td>
+</tr>
+<tr>
+<td>Churn control</td>
+<td>Unexpected URL count delta over threshold triggers review</td>
+</tr>
+<tr>
+<td>Critical journey coverage</td>
+<td>100% of approved critical journeys represented</td>
+</tr>
+<tr>
+<td>Scanability</td>
+<td>URLs returning non-200 or blocked responses routed to triage queue</td>
+</tr>
+</tbody>
+</table>
+<p>This prevents a false sense of completeness and keeps executive reporting trustworthy.</p>
+<hr />
+<h2 id="5-implementation-phases">5. Implementation Phases</h2>
+<h3 id="phase-0-test-case-week-12">Phase 0 — Test Case (Week 1–2)</h3>
+<p><strong>Goal:</strong> Prove the pipeline works. No risk. High learning.</p>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Owner</th>
+<th>Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Add <code>az-quickstart-scan.yml</code> workflow to <code>accesswatch/azaccess</code></td>
+<td>Jeff Bishop</td>
+<td>2 hrs</td>
+</tr>
+<tr>
+<td>Create <code>GH_TOKEN</code> PAT with write access to <code>accesswatch/az_quickstart</code></td>
+<td>Jeff Bishop</td>
+<td>30 min</td>
+</tr>
+<tr>
+<td>Run first scan against <code>quickstart.arizona.edu</code> pages</td>
+<td>Automated</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Review filed issues, validate groupings and deduplication</td>
+<td>Jeff Bishop</td>
+<td>1 hr</td>
+</tr>
+<tr>
+<td>Document baseline findings</td>
+<td>Jeff Bishop</td>
+<td>2 hrs</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Deliverable:</strong> First set of real issues in <code>accesswatch/az_quickstart</code>. Proof of concept complete.</p>
+<hr />
+<h3 id="phase-1-foundation-weeks-36">Phase 1 — Foundation (Weeks 3–6)</h3>
+<p><strong>Goal:</strong> Scan live Quickstart-powered sites systematically. Build baseline.</p>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Owner</th>
+<th>Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Expand URL list to 10–20 Quickstart-powered UA sites</td>
+<td>Jeff + Arizona Digital</td>
+<td>1 day</td>
+</tr>
+<tr>
+<td>Configure URL-specific exclusion selectors for third-party widgets</td>
+<td>Jeff Bishop</td>
+<td>2 hrs</td>
+</tr>
+<tr>
+<td>Set up label taxonomy in <code>az_quickstart</code> repo (wcag-level, impact, component)</td>
+<td>Jeff Bishop</td>
+<td>1 hr</td>
+</tr>
+<tr>
+<td>Enable <code>open_grouped_issues: true</code> for violation-type grouping</td>
+<td>Jeff Bishop</td>
+<td>30 min</td>
+</tr>
+<tr>
+<td>Enable <code>include_screenshots: true</code> for visual evidence in issues</td>
+<td>Jeff Bishop</td>
+<td>30 min</td>
+</tr>
+<tr>
+<td>Add reflow scan (mobile accessibility) to scan config</td>
+<td>Jeff Bishop</td>
+<td>30 min</td>
+</tr>
+<tr>
+<td>Review grouped issues and begin identifying Quickstart component patterns</td>
+<td>Arizona Digital</td>
+<td>Ongoing</td>
+</tr>
+<tr>
+<td>Share Phase 1 findings summary with Arizona Digital team</td>
+<td>Jeff Bishop</td>
+<td>1 day</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Deliverable:</strong> Baseline accessibility inventory for 10–20 Quickstart sites. Violation pattern report. Label taxonomy in place.</p>
+<hr />
+<h3 id="phase-2-pr-level-gates-weeks-712">Phase 2 — PR-Level Gates (Weeks 7–12)</h3>
+<p><strong>Goal:</strong> Catch regressions before they merge. Start non-blocking, then graduate to targeted blocking.</p>
+<p>This phase requires coordination with <code>az-digital/az_quickstart</code> maintainers to add a workflow to the upstream repository.</p>
+<p><strong>The PR-level scanner approach for a Drupal project:</strong></p>
+<p>Arizona Quickstart uses <a href="https://www.tugboatqa.com/">Tugboat</a> for PR preview environments. Every PR to <code>az-digital/az_quickstart</code> automatically gets a live preview URL. The scanner can target that URL.</p>
+<pre><code class="language-yaml"># Workflow to add to az-digital/az_quickstart
+name: PR Accessibility Gate
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  scan_pr_preview:
+    runs-on: ubuntu-latest
+    # Wait for Tugboat to build the preview first
+    steps:
+      - name: Wait for Tugboat deployment
+        # Use Tugboat's API or a manual delay
+        run: sleep 120
+
+      - uses: github/accessibility-scanner@v3
+        with:
+          urls: |
+            ${{ steps.tugboat.outputs.preview_url }}
+          repository: az-digital/az_quickstart
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: pr-${{ github.event.number }}-scan.json
+          include_screenshots: true
+</code></pre>
+<p><strong>Alternative for Phase 2 (no Tugboat coordination needed):</strong> Run the scanner against <code>quickstart.arizona.edu</code> after each merge to <code>main</code> (not on each PR). This catches post-merge regressions immediately.</p>
+<p><strong>Deliverable:</strong> Accessibility findings surface within minutes of a merge. No regression ships undetected for more than one deploy cycle.</p>
+<h4 id="recommended-pr-check-behavior-non-blocking-first">Recommended PR check behavior (non-blocking first)</h4>
+<p>Use this rollout for <code>az-digital/az_quickstart</code>:</p>
+<ol>
+<li><strong>Weeks 1–2 (observe):</strong> Run PR Axe checks with <code>continue-on-error: true</code>, post summary comment, collect baseline noise.</li>
+<li><strong>Weeks 3–4 (soft enforce):</strong> Keep non-blocking status check, but require triage labels (<code>a11y-reviewed</code>, <code>a11y-exception</code>) before merge on high-risk PRs.</li>
+<li><strong>Week 5+ (targeted blocking):</strong> Fail only on agreed critical rules (for example: keyboard traps, missing form labels, severe contrast regressions).</li>
+</ol>
+<p>This avoids rollout friction while still building reliable CI signal quality.</p>
+<h4 id="pr-gate-policy-matrix-definitive">PR gate policy matrix (definitive)</h4>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Check behavior</th>
+<th>Merge impact</th>
+<th>Exit criteria to next stage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stage A (baseline)</td>
+<td>Non-blocking (<code>continue-on-error: true</code>) + summary comment</td>
+<td>None</td>
+<td>2 weeks of stable run reliability</td>
+</tr>
+<tr>
+<td>Stage B (guardrail)</td>
+<td>Non-blocking check + required triage label on serious/critical findings</td>
+<td>Low friction</td>
+<td>False-positive rate below agreed threshold</td>
+</tr>
+<tr>
+<td>Stage C (targeted block)</td>
+<td>Blocking only on selected high-impact Axe rules</td>
+<td>Medium</td>
+<td>Team agrees rule set and exception policy</td>
+</tr>
+<tr>
+<td>Stage D (mature)</td>
+<td>Blocking on full agreed baseline + exception SLA</td>
+<td>High confidence</td>
+<td>Quarterly review and recalibration</td>
+</tr>
+</tbody>
+</table>
+<h4 id="ci-execution-topology-clone-vs-deployed-target">CI execution topology (clone vs deployed target)</h4>
+<p>Use this decision table for where PR/check-in scans run:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Target scanned</th>
+<th>Best use</th>
+<th>Pros</th>
+<th>Constraints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PR preview/staging URL</td>
+<td>Rendered deploy preview (Tugboat/staging)</td>
+<td>Primary PR signal</td>
+<td>Real rendering and integrations</td>
+<td>Requires preview environment readiness</td>
+</tr>
+<tr>
+<td>Local clone in CI job</td>
+<td>App started in workflow (<code>localhost</code>)</td>
+<td>Fast feedback on every check-in</td>
+<td>No external deployment dependency</td>
+<td>Runner must build/start app reliably</td>
+</tr>
+<tr>
+<td>Production live URL</td>
+<td>Deployed public site</td>
+<td>Continuous monitoring</td>
+<td>Catches content/config drift in real world</td>
+<td>Not ideal as only PR gate</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Definitive recommendation:</strong> run all three over time, with PR preview/local clone for pre-merge and production URLs for continuous monitoring.</p>
+<h4 id="ci-order-of-execution-per-pull-request">CI order of execution per pull request</h4>
+<ol>
+<li>Build app/preview from PR branch.</li>
+<li>Run Axe-core checks against rendered preview or local CI-hosted clone.</li>
+<li>Post PR summary (always) and apply policy matrix (Stage A-D).</li>
+<li>On merge, run smoke live scan on key production URLs.</li>
+<li>Nightly, run full live inventory scan.</li>
+</ol>
+<hr />
+<h3 id="phase-3-pattern-library-and-copilot-fixes-weeks-1320">Phase 3 — Pattern Library and Copilot Fixes (Weeks 13–20)</h3>
+<p><strong>Goal:</strong> Use finding patterns to drive Quickstart component-level fixes. Leverage Copilot.</p>
+<p>By Phase 3, the scanner will have filed dozens (possibly hundreds) of issues with Copilot assignments. The key activities:</p>
+<table>
+<thead>
+<tr>
+<th>Activity</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Component pattern mapping</strong></td>
+<td>Group issues by Quickstart component (<code>az-card</code>, <code>az-hero</code>, <code>az-nav</code>, etc.) to identify which components produce the most violations</td>
+</tr>
+<tr>
+<td><strong>Copilot fix review cycle</strong></td>
+<td>Establish a review cadence: Copilot proposes fix → human reviews → merges or provides feedback</td>
+</tr>
+<tr>
+<td><strong>Fix pattern documentation</strong></td>
+<td>Document recurring Copilot-suggested fixes that prove correct as "accepted patterns" for future training</td>
+</tr>
+<tr>
+<td><strong>Upstream contribution</strong></td>
+<td>Propose accepted component fixes as PRs to <code>az-digital/az_quickstart</code>, benefiting all campus sites</td>
+</tr>
+<tr>
+<td><strong>Exclusion refinement</strong></td>
+<td>Update <code>url_configs</code> to exclude known third-party widgets that generate noise but can't be fixed</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Deliverable:</strong> At least 5 Quickstart component accessibility fixes contributed upstream. Pattern library document. Copilot fix acceptance rate baseline.</p>
+<hr />
+<h3 id="phase-4-continuous-monitoring-and-scale-months-6">Phase 4 — Continuous Monitoring and Scale (Months 6+)</h3>
+<p><strong>Goal:</strong> Operational excellence. Scale to all Quickstart-powered UA sites.</p>
+<table>
+<thead>
+<tr>
+<th>Activity</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Scheduled nightly scan</strong></td>
+<td>Scan full URL inventory nightly, detect any new regressions</td>
+</tr>
+<tr>
+<td><strong>Trend dashboard v2</strong></td>
+<td>Enhanced GitHub Pages dashboard showing per-site scores, improvement trends, top violations by component</td>
+</tr>
+<tr>
+<td><strong>Integration with DRC</strong></td>
+<td>Flag issues that disproportionately affect users with disabilities (contrast, keyboard, screen reader) with priority labeling</td>
+</tr>
+<tr>
+<td><strong>Exception management</strong></td>
+<td>Formal exception request process for known third-party limitations</td>
+</tr>
+<tr>
+<td><strong>Arizona Digital partnership</strong></td>
+<td>Regular sync with <code>az-digital</code> team to present findings and drive component updates</td>
+</tr>
+<tr>
+<td><strong>Leadership reporting</strong></td>
+<td>Monthly one-page summary with KPI progress for leadership review</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="recommended-order-of-execution-first-90-days">Recommended Order of Execution (First 90 Days)</h3>
+<p>This is the clearest path to find the most issues early while keeping team velocity:</p>
+<ol>
+<li><strong>Stabilize live-site baseline first:</strong> Scan top public pages + top user journeys, nightly, with deduplication enabled.</li>
+<li><strong>Expand URL coverage systematically:</strong> Add pages from sitemap, nav trees, analytics top pages, and known high-risk templates.</li>
+<li><strong>Enable PR Axe checks in non-blocking mode:</strong> Surface regressions per check-in without blocking delivery.</li>
+<li><strong>Label and normalize findings:</strong> Severity, WCAG criterion, component, environment, ownership.</li>
+<li><strong>Promote high-confidence PR checks to targeted blocking:</strong> Only after 2-4 weeks of baseline data.</li>
+<li><strong>Close loop with dashboard and pattern reviews:</strong> Weekly triage and monthly leadership trend review.</li>
+</ol>
+<h3 id="operational-cadence-recommended">Operational Cadence (Recommended)</h3>
+<table>
+<thead>
+<tr>
+<th>Cadence</th>
+<th>What runs</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>On PR open/update</td>
+<td>Axe-core CI check on preview/build (non-blocking at first)</td>
+<td>Catch regressions before merge</td>
+</tr>
+<tr>
+<td>On push to <code>main</code></td>
+<td>Fast smoke scan of key live pages</td>
+<td>Catch deployment regressions quickly</td>
+</tr>
+<tr>
+<td>Nightly</td>
+<td>Full live-site inventory scan via <code>accessibility-scanner@v3</code></td>
+<td>Find broad production/content issues</td>
+</tr>
+<tr>
+<td>Weekly</td>
+<td>Triage + component pattern review</td>
+<td>Convert findings into actionable engineering work</td>
+</tr>
+<tr>
+<td>Weekly</td>
+<td>URL discovery QA review (coverage, churn, failures)</td>
+<td>Ensure scan target list quality stays high</td>
+</tr>
+<tr>
+<td>Monthly</td>
+<td>Dashboard snapshot + leadership readout</td>
+<td>Track trendlines, impact, and accountability</td>
+</tr>
+<tr>
+<td>Monthly (Executive recheck)</td>
+<td>Review previously known high-impact findings, reopened issues, and exception aging</td>
+<td>Ensure strategic risks are actively retired, not normalized</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-deduplication-and-noise-reduction">6. Deduplication and Noise Reduction</h2>
+<h3 id="how-the-scanner-prevents-repeated-issue-noise">How the Scanner Prevents Repeated Issue Noise</h3>
+<p>This is addressed directly by the scanner's <code>cache_key</code> mechanism.</p>
+<p><strong>How it works:</strong></p>
+<ol>
+<li>On first scan, every new finding generates a GitHub Issue. The finding's fingerprint is stored in the cache.</li>
+<li>On subsequent scans, the cache is restored. If a finding's fingerprint already exists in the cache AND a linked GitHub Issue exists (open or closed), the finding is skipped.</li>
+<li>If an issue is closed (fixed), and the violation re-appears in a future scan, the scanner re-files it — because the fix regressed.</li>
+</ol>
+<p><strong>Key design principles for this deployment:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Same violation on 50 pages</td>
+<td>Use <code>open_grouped_issues: true</code> — one "grouped" tracking issue per violation type instead of 50 individual issues</td>
+</tr>
+<tr>
+<td>Scanner re-runs same URLs nightly</td>
+<td><code>cache_key</code> prevents re-filing already-known issues</td>
+</tr>
+<tr>
+<td>Third-party widget fires false positives</td>
+<td>Use <code>url_configs[].excludeSelectors</code> to exclude known noise elements</td>
+</tr>
+<tr>
+<td>Multiple sites have same systemic issue</td>
+<td>Group issues with labels like <code>component:az-nav</code> to see cross-site patterns without duplicate issues per site</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Configuration example for noise-controlled scanning:</strong></p>
+<pre><code class="language-yaml">url_configs: |
+  [
+    {
+      &quot;url&quot;: &quot;https://quickstart.arizona.edu&quot;,
+      &quot;excludeSelectors&quot;: [&quot;iframe[src*='googletagmanager']&quot;, &quot;.social-media-feed&quot;, &quot;#chat-widget&quot;]
+    },
+    {
+      &quot;url&quot;: &quot;https://medicine.arizona.edu&quot;,
+      &quot;excludeSelectors&quot;: [&quot;#third-party-scheduler&quot;, &quot;.ads-container&quot;]
+    }
+  ]
+</code></pre>
+<p><strong>Recommended cache_key naming convention:</strong></p>
+<pre><code>az-quickstart-{site-slug}-{branch-or-env}.json
+</code></pre>
+<p>Examples:
+- <code>az-quickstart-main-site.json</code> — production quickstart.arizona.edu
+- <code>az-quickstart-medicine.json</code> — medicine.arizona.edu
+- <code>az-quickstart-pr-{pr_number}.json</code> — PR preview environments (auto-expires)</p>
+<hr />
+<h2 id="7-dashboard-and-metrics">7. Dashboard and Metrics</h2>
+<h3 id="what-we-can-build-no-new-tools-required">What We Can Build — No New Tools Required</h3>
+<p>The <code>accesswatch/azaccess</code> repo already has a working dashboard pattern. That pattern scales directly to az_quickstart findings.</p>
+<p><strong>Dashboard data flow:</strong></p>
+<pre><code>Scanner run
+    │
+    ▼
+results_file JSON
+(output of scanner action)
+    │
+    ├──▶ Committed to gh-cache branch (screenshots, raw results)
+    │
+    ├──▶ GitHub Issues (queryable via GitHub API)
+    │
+    └──▶ record-history.js script
+              │
+              ▼
+         docs/reports/history/
+         (timestamped JSON snapshots)
+              │
+              ▼
+         GitHub Pages Dashboard
+         (static HTML reads JSON, renders charts)
+</code></pre>
+<h3 id="dashboard-panels-recommended-for-leadership-view">Dashboard Panels — Recommended for Leadership View</h3>
+<table>
+<thead>
+<tr>
+<th>Panel</th>
+<th>Description</th>
+<th>Data Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Accessibility Health Score</strong></td>
+<td>Weighted score (0–100) based on open critical/serious/moderate issues</td>
+<td>GitHub Issues API</td>
+</tr>
+<tr>
+<td><strong>Trend Sparkline</strong></td>
+<td>30/60/90-day issue count trend</td>
+<td>History JSON</td>
+</tr>
+<tr>
+<td><strong>Top 10 Violations</strong></td>
+<td>Most common violation types across all scanned sites</td>
+<td>Grouped issues</td>
+</tr>
+<tr>
+<td><strong>Component Heat Map</strong></td>
+<td>Which Quickstart components generate the most issues</td>
+<td>Issue labels</td>
+</tr>
+<tr>
+<td><strong>Site Scorecard</strong></td>
+<td>Per-site issue count and severity breakdown</td>
+<td>Results JSON</td>
+</tr>
+<tr>
+<td><strong>Resolution Velocity</strong></td>
+<td>Issues closed per sprint / average days-to-close</td>
+<td>GitHub Issues API</td>
+</tr>
+<tr>
+<td><strong>Copilot Fix Rate</strong></td>
+<td>Percentage of Copilot-assigned issues that produced accepted PRs</td>
+<td>PR API</td>
+</tr>
+<tr>
+<td><strong>WCAG Criterion Breakdown</strong></td>
+<td>Which WCAG success criteria are most frequently violated</td>
+<td>Violation IDs mapped to criteria</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dashboard-vnext-training-awareness-high-impact">Dashboard vNext (Training + Awareness + High Impact)</h3>
+<p>Add these views to turn data into behavior change:</p>
+<table>
+<thead>
+<tr>
+<th>Panel</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>High-Impact Issues</strong></td>
+<td>Ranks violations by user impact x page traffic x time open so teams fix what hurts users most first</td>
+</tr>
+<tr>
+<td><strong>Regression Radar</strong></td>
+<td>Highlights "new this week" issues by component and release to show where quality slipped</td>
+</tr>
+<tr>
+<td><strong>Top Repeat Offenders</strong></td>
+<td>Shows recurring rule failures and templates causing repeated violations</td>
+</tr>
+<tr>
+<td><strong>Fix Effectiveness</strong></td>
+<td>Tracks reopened/regressed issues after closure to measure true fix quality</td>
+</tr>
+<tr>
+<td><strong>Team Learning Feed</strong></td>
+<td>Weekly "what we learned" cards from accepted fixes, mapped to components and WCAG</td>
+</tr>
+<tr>
+<td><strong>Exception Debt Tracker</strong></td>
+<td>Counts temporary exceptions, age, owner, and expiration date to prevent permanent debt</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Implementation note:</strong> Build this with static JSON snapshots + GitHub Pages (no new paid tooling required).</p>
+<h3 id="dashboard-delivery-plan-phased">Dashboard delivery plan (phased)</h3>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Deliverable</th>
+<th>Timebox</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phase A</td>
+<td>Executive scorecard (health score, trendline, top violations, high-impact queue)</td>
+<td>1-2 weeks</td>
+</tr>
+<tr>
+<td>Phase B</td>
+<td>Engineering drilldowns (component heat map, regression radar, exception debt)</td>
+<td>2-3 weeks</td>
+</tr>
+<tr>
+<td>Phase C</td>
+<td>Training layer (team learning feed, accepted fix patterns, "before/after" examples)</td>
+<td>2 weeks</td>
+</tr>
+<tr>
+<td>Phase D</td>
+<td>Operational automation (weekly snapshot generation, monthly export packet)</td>
+<td>1 week</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dashboard-data-model-recommended-columns">Dashboard data model (recommended columns)</h3>
+<p>Use these core columns so the dashboard supports trend analysis, ownership routing, and executive rechecks:</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>snapshot_date</code></td>
+<td>Date of dashboard snapshot</td>
+</tr>
+<tr>
+<td><code>environment</code></td>
+<td><code>pr-preview</code>, <code>staging</code>, or <code>production</code></td>
+</tr>
+<tr>
+<td><code>site</code></td>
+<td>Site/domain being scanned</td>
+</tr>
+<tr>
+<td><code>page_url</code></td>
+<td>Page where finding was detected</td>
+</tr>
+<tr>
+<td><code>component</code></td>
+<td>Quickstart component or template area</td>
+</tr>
+<tr>
+<td><code>rule_id</code></td>
+<td>Axe rule identifier (for example <code>color-contrast</code>)</td>
+</tr>
+<tr>
+<td><code>wcag_criterion</code></td>
+<td>Mapped WCAG criterion (for example <code>1.4.3</code>)</td>
+</tr>
+<tr>
+<td><code>impact</code></td>
+<td><code>critical</code>, <code>serious</code>, <code>moderate</code>, <code>minor</code></td>
+</tr>
+<tr>
+<td><code>issue_number</code></td>
+<td>Linked GitHub issue number</td>
+</tr>
+<tr>
+<td><code>issue_state</code></td>
+<td><code>open</code> or <code>closed</code></td>
+</tr>
+<tr>
+<td><code>first_seen_at</code></td>
+<td>First detection date</td>
+</tr>
+<tr>
+<td><code>last_seen_at</code></td>
+<td>Most recent detection date</td>
+</tr>
+<tr>
+<td><code>recheck_status</code></td>
+<td><code>persistent</code>, <code>resolved</code>, <code>regressed</code>, <code>exception-approved</code></td>
+</tr>
+<tr>
+<td><code>exception_expiry</code></td>
+<td>Date approved exception expires (if applicable)</td>
+</tr>
+<tr>
+<td><code>owner_role</code></td>
+<td><code>content-editor</code>, <code>site-builder</code>, <code>dev</code></td>
+</tr>
+<tr>
+<td><code>owner_team</code></td>
+<td>Responsible team/group</td>
+</tr>
+<tr>
+<td><code>days_open</code></td>
+<td>Age of currently open issue</td>
+</tr>
+<tr>
+<td><code>traffic_band</code></td>
+<td>Relative page traffic bucket (high/medium/low)</td>
+</tr>
+<tr>
+<td><code>copilot_assigned</code></td>
+<td>Whether issue was assigned to Copilot</td>
+</tr>
+<tr>
+<td><code>fix_pr_number</code></td>
+<td>Linked fix PR when available</td>
+</tr>
+<tr>
+<td><code>fix_outcome</code></td>
+<td><code>accepted</code>, <code>rejected</code>, <code>pending</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="metrics-definitions-for-consistency">Metrics definitions (for consistency)</h3>
+<p>Use explicit formulas so leadership and engineering read the same signal:</p>
+<ul>
+<li><strong>Accessibility Health Score (0-100):</strong> <code>100 - weighted_open_issue_rate</code>, weighted by severity (<code>critical &gt; serious &gt; moderate &gt; minor</code>).</li>
+<li><strong>Regression Rate:</strong> <code>new_issues_this_period / pages_scanned_this_period</code>.</li>
+<li><strong>Fix Throughput:</strong> <code>issues_closed_this_period / issues_opened_this_period</code>.</li>
+<li><strong>Mean Time to Resolution (MTTR):</strong> <code>average(days_open)</code> for closed issues in period.</li>
+<li><strong>High-Impact Backlog:</strong> count of open issues where <code>severity &gt;= serious</code> and page traffic is above threshold.</li>
+</ul>
+<h3 id="recommended-label-taxonomy-for-az_quickstart-issues">Recommended Label Taxonomy for az_quickstart Issues</h3>
+<pre><code># Severity (from scanner)
+impact:critical
+impact:serious
+impact:moderate
+impact:minor
+
+# WCAG level
+wcag:1.4.3-contrast
+wcag:1.1.1-alt-text
+wcag:4.1.2-name-role-value
+wcag:2.4.1-bypass-blocks
+# ... etc.
+
+# Component
+component:az-card
+component:az-hero
+component:az-nav
+component:az-footer
+component:az-accordion
+# ... etc.
+
+# Environment
+env:production
+env:pr-preview
+env:staging
+
+# State
+needs-review
+copilot-assigned
+accepted-fix
+exception-approved
+</code></pre>
+<hr />
+<h2 id="8-pattern-learning-strategy">8. Pattern Learning Strategy</h2>
+<h3 id="the-learning-flywheel">The Learning Flywheel</h3>
+<p>Each scanner run teaches you something. The goal is to build a compounding knowledge system:</p>
+<pre><code>Scan runs
+    │
+    ▼
+Issues filed (labeled with component + WCAG criterion)
+    │
+    ▼
+Copilot proposes fix
+    │
+    ▼
+Human reviews and merges (or rejects with feedback)
+    │
+    ▼
+Pattern documented:
+  &quot;az-card component: images without alt text
+   → Fix: Add aria-label to card image wrapper&quot;
+    │
+    ▼
+Fix proposed upstream to az-digital/az_quickstart
+    │
+    ▼
+Upstream merge → all campus sites benefit
+    │
+    ▼
+Scanner confirms fix on next run → issue stays closed
+    │
+    ▼
+Pattern added to exclusion list (not noise, just fixed)
+</code></pre>
+<h3 id="pattern-library-artifact">Pattern Library Artifact</h3>
+<p>Maintain a <code>PATTERNS.md</code> in <code>accesswatch/az_quickstart</code> that documents:
+- Which component generated the issue
+- The WCAG criterion violated
+- The Copilot-suggested fix (or manually crafted fix)
+- Acceptance status (accepted / rejected / pending)
+- Link to the upstream PR if contributed</p>
+<p>This becomes an invaluable learning resource and a source document for Arizona Digital's own accessibility documentation.</p>
+<hr />
+<h2 id="9-resource-requirements">9. Resource Requirements</h2>
+<h3 id="personnel">Personnel</h3>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Phase 0–1</th>
+<th>Phase 2–3</th>
+<th>Phase 4+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accessibility Lead (Jeff Bishop)</td>
+<td>15–20 hrs</td>
+<td>10 hrs/sprint</td>
+<td>4–6 hrs/sprint</td>
+</tr>
+<tr>
+<td>Frontend Developer (Arizona Digital)</td>
+<td>2 hrs</td>
+<td>8 hrs/sprint</td>
+<td>2 hrs/sprint</td>
+</tr>
+<tr>
+<td>DevOps / GitHub Admin</td>
+<td>1 hr</td>
+<td>4 hrs</td>
+<td>1 hr/sprint</td>
+</tr>
+<tr>
+<td>QA / Tester</td>
+<td>0 hrs</td>
+<td>4 hrs/sprint</td>
+<td>2 hrs/sprint</td>
+</tr>
+</tbody>
+</table>
+<h3 id="infrastructure-costs">Infrastructure Costs</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Cost</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GitHub Actions minutes</td>
+<td>$0</td>
+<td>Included in current GitHub plan</td>
+</tr>
+<tr>
+<td><code>github/accessibility-scanner@v3</code></td>
+<td>$0</td>
+<td>Open source, MIT license</td>
+</tr>
+<tr>
+<td>GitHub Issues storage</td>
+<td>$0</td>
+<td>Included</td>
+</tr>
+<tr>
+<td>GitHub Pages (dashboard)</td>
+<td>$0</td>
+<td>Included</td>
+</tr>
+<tr>
+<td>GitHub Copilot (fix suggestions)</td>
+<td>Existing license</td>
+<td>Already required for full scanner functionality</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>$0 additional</strong></td>
+<td>Leverages existing GitHub infrastructure</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-success-metrics-and-kpis">10. Success Metrics and KPIs</h2>
+<h3 id="phase-0-proof-of-concept">Phase 0 (Proof of Concept)</h3>
+<ul>
+<li>[ ] First scanner run completes successfully against <code>quickstart.arizona.edu</code></li>
+<li>[ ] Issues filed correctly in <code>accesswatch/az_quickstart</code></li>
+<li>[ ] Zero duplicate issues on second run (cache working)</li>
+<li>[ ] Grouped issues correctly cluster related violations</li>
+</ul>
+<h3 id="90-day-kpis">90-Day KPIs</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Baseline</th>
+<th>90-Day Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Critical violations in production Quickstart sites</td>
+<td>TBD (first scan)</td>
+<td>-50%</td>
+</tr>
+<tr>
+<td>Open a11y issues with accepted Copilot fix</td>
+<td>0</td>
+<td>10+</td>
+</tr>
+<tr>
+<td>Quickstart components with documented a11y patterns</td>
+<td>0</td>
+<td>5+</td>
+</tr>
+<tr>
+<td>Unique URLs scanned</td>
+<td>0</td>
+<td>20+</td>
+</tr>
+<tr>
+<td>Upstream PRs contributed to <code>az-digital/az_quickstart</code></td>
+<td>0</td>
+<td>2+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-month-kpis">12-Month KPIs</h3>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>12-Month Target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Critical violations in production</td>
+<td>-90% from baseline</td>
+</tr>
+<tr>
+<td>Accessibility health score (0–100)</td>
+<td>85+</td>
+</tr>
+<tr>
+<td>Copilot fix acceptance rate</td>
+<td>60%+</td>
+</tr>
+<tr>
+<td>Developer awareness (survey)</td>
+<td>80%+ "I use the scanner results in my workflow"</td>
+</tr>
+<tr>
+<td>Upstream component fixes</td>
+<td>10+ merged to <code>az-digital/az_quickstart</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="11-risks-and-mitigations">11. Risks and Mitigations</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Likelihood</th>
+<th>Impact</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Arizona Digital team not yet onboarded to scanner</td>
+<td>Medium</td>
+<td>High</td>
+<td>Phase 0 runs in <code>accesswatch</code> — no upstream coordination needed initially</td>
+</tr>
+<tr>
+<td>Drupal rendering complexity breaks scan</td>
+<td>Low</td>
+<td>Medium</td>
+<td>Start with public pages; adjust Playwright wait times via <code>url_configs</code></td>
+</tr>
+<tr>
+<td>Issue volume overwhelms reviewers</td>
+<td>Medium</td>
+<td>Medium</td>
+<td><code>open_grouped_issues: true</code> + label taxonomy keeps volume manageable</td>
+</tr>
+<tr>
+<td>Tugboat preview URLs are ephemeral</td>
+<td>Low</td>
+<td>Low</td>
+<td>Use per-PR <code>cache_key</code> with PR number; cache auto-expires with PR</td>
+</tr>
+<tr>
+<td>Third-party widgets generate noise</td>
+<td>High</td>
+<td>Low</td>
+<td><code>excludeSelectors</code> in <code>url_configs</code> handles this precisely</td>
+</tr>
+<tr>
+<td><code>GH_TOKEN</code> PAT management</td>
+<td>Low</td>
+<td>High</td>
+<td>Use fine-grained PAT scoped to specific repos; rotate every 12 months</td>
+</tr>
+<tr>
+<td>Copilot suggests incorrect fixes</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Always require human review before merge — this is documented scanner behavior</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="12-appendices">12. Appendices</h2>
+<h3 id="appendix-a-immediate-next-steps-checklist">Appendix A: Immediate Next Steps Checklist</h3>
+<p>Copy this into a GitHub Project board or sprint:</p>
+<pre><code>PHASE 0 SPRINT
+─────────────────────────────────────────────────────────────────
+[ ] Create fine-grained PAT (GH_TOKEN) with write access to:
+    - accesswatch/az_quickstart (contents, issues, pull-requests)
+    - accesswatch/azaccess (contents)
+
+[ ] Add GH_TOKEN as repository secret in accesswatch/azaccess
+
+[ ] Create .github/workflows/az-quickstart-scan.yml in accesswatch/azaccess
+    (workflow code is in Appendix B)
+
+[ ] Run workflow manually (workflow_dispatch) and observe results
+
+[ ] Review filed issues in accesswatch/az_quickstart
+
+[ ] Run workflow a second time — confirm zero duplicate issues (cache works)
+
+[ ] Add label taxonomy to accesswatch/az_quickstart (see Section 7)
+
+[ ] Share Phase 0 findings with Arizona Digital team
+</code></pre>
+<h3 id="appendix-b-complete-phase-0-workflow-file">Appendix B: Complete Phase 0 Workflow File</h3>
+<p>Save as <code>.github/workflows/az-quickstart-scan.yml</code> in <code>accesswatch/azaccess</code>:</p>
+<pre><code class="language-yaml">name: AZ Quickstart Accessibility Scan
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Monday at 6am MST (13:00 UTC)
+    - cron: '0 13 * * 1'
+
+concurrency:
+  group: az-quickstart-scan
+  cancel-in-progress: true
+
+jobs:
+  scan_quickstart_public:
+    name: Scan Quickstart Public Pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: github/accessibility-scanner@v3
+        with:
+          urls: |
+            https://quickstart.arizona.edu
+            https://quickstart.arizona.edu/best-practices/accessibility-guidelines
+            https://quickstart.arizona.edu/create-content/editor-toolbar
+            https://quickstart.arizona.edu/get-started/overview
+            https://quickstart.arizona.edu/news
+            https://quickstart.arizona.edu/arizona-sites-training-support
+          repository: accesswatch/az_quickstart
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: az-quickstart-main-site.json
+          include_screenshots: true
+          open_grouped_issues: true
+          scans: '[&quot;axe&quot;, &quot;reflow-scan&quot;]'
+
+  scan_quickstart_powered_sites:
+    name: Scan Quickstart-Powered UA Sites
+    runs-on: ubuntu-latest
+    needs: scan_quickstart_public
+    steps:
+      - uses: github/accessibility-scanner@v3
+        with:
+          url_configs: |
+            [
+              {&quot;url&quot;: &quot;https://medicine.arizona.edu&quot;, &quot;excludeSelectors&quot;: []},
+              {&quot;url&quot;: &quot;https://eller.arizona.edu&quot;, &quot;excludeSelectors&quot;: []},
+              {&quot;url&quot;: &quot;https://capla.arizona.edu&quot;, &quot;excludeSelectors&quot;: []},
+              {&quot;url&quot;: &quot;https://drc.arizona.edu&quot;, &quot;excludeSelectors&quot;: []},
+              {&quot;url&quot;: &quot;https://ischool.arizona.edu&quot;, &quot;excludeSelectors&quot;: []}
+            ]
+          repository: accesswatch/az_quickstart
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: az-quickstart-campus-sites.json
+          include_screenshots: true
+          open_grouped_issues: true
+          scans: '[&quot;axe&quot;, &quot;reflow-scan&quot;]'
+</code></pre>
+<h3 id="appendix-c-relationship-to-existing-accessibility-ci-proposalmd">Appendix C: Relationship to Existing ACCESSIBILITY-CI-PROPOSAL.md</h3>
+<p>The <code>ACCESSIBILITY-CI-PROPOSAL.md</code> in <code>accesswatch/azaccess</code> is a complementary document focused on <strong>CI gates using axe-core/Lighthouse/Pa11y CLI tools</strong> run against a built artifact. This plan focuses on <strong>the <code>github/accessibility-scanner@v3</code> action</strong> which runs against live URLs.</p>
+<p>These are not competing approaches — they are complementary and should run together:</p>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Best For</th>
+<th>Tool</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CI artifact scan (existing proposal)</td>
+<td>React/Vue/Next.js static sites with build artifacts</td>
+<td>axe-core CLI + Lighthouse CI + Pa11y</td>
+</tr>
+<tr>
+<td>Live URL scan (this plan)</td>
+<td>Drupal/Quickstart sites that require a running server</td>
+<td><code>github/accessibility-scanner@v3</code></td>
+</tr>
+<tr>
+<td>Both combined</td>
+<td>Complete coverage: catch issues at build time AND in rendered context</td>
+<td>Both workflows running in parallel</td>
+</tr>
+</tbody>
+</table>
+<p>For Arizona Quickstart specifically (a Drupal distribution), <strong>live URL scanning is the right primary approach</strong> because the rendered output depends on Drupal's templating, CMS content, and contributed modules — none of which are visible in source code alone.</p>
+<p>For CI check-ins and pull requests, use <strong>Axe-core as the primary gate signal</strong> and keep it non-blocking initially until false positive/noise rates are stable.</p>
+<h3 id="appendix-d-scanner-inputs-reference">Appendix D: Scanner Inputs Reference</h3>
+<p>Full reference for the <code>github/accessibility-scanner@v3</code> action inputs used in this plan:</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>This Plan's Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>urls</code></td>
+<td>List of Quickstart-powered site URLs</td>
+</tr>
+<tr>
+<td><code>url_configs</code></td>
+<td>Per-site URL with <code>excludeSelectors</code> for third-party widgets</td>
+</tr>
+<tr>
+<td><code>repository</code></td>
+<td><code>accesswatch/az_quickstart</code> — where issues are filed</td>
+</tr>
+<tr>
+<td><code>token</code></td>
+<td>Fine-grained PAT with write access to <code>az_quickstart</code></td>
+</tr>
+<tr>
+<td><code>cache_key</code></td>
+<td>Prevents re-filing known issues; one key per site group</td>
+</tr>
+<tr>
+<td><code>include_screenshots</code></td>
+<td>Visual evidence attached to every issue</td>
+</tr>
+<tr>
+<td><code>open_grouped_issues</code></td>
+<td>One tracking issue per violation type (reduces noise)</td>
+</tr>
+<tr>
+<td><code>scans</code></td>
+<td><code>["axe", "reflow-scan"]</code> — both desktop and mobile reflow</td>
+</tr>
+<tr>
+<td><code>skip_copilot_assignment</code></td>
+<td><code>false</code> — assign to Copilot for fix suggestions</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="appendix-e-practical-ci-target-patterns">Appendix E: Practical CI Target Patterns</h3>
+<h4 id="pattern-1-scan-pr-preview-url-recommended-when-available">Pattern 1: Scan PR preview URL (recommended when available)</h4>
+<pre><code class="language-yaml">name: PR Accessibility (Preview URL)
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr_preview_scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for preview deployment
+        run: sleep 120
+
+      - uses: github/accessibility-scanner@v3
+        with:
+          urls: |
+            ${{ steps.preview.outputs.url }}
+          repository: az-digital/az_quickstart
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: az-quickstart-pr-${{ github.event.number }}.json
+          include_screenshots: true
+          open_grouped_issues: true
+</code></pre>
+<h4 id="pattern-2-scan-local-clone-served-in-ci-no-preview-dependency">Pattern 2: Scan local clone served in CI (no preview dependency)</h4>
+<pre><code class="language-yaml">name: PR Accessibility (Local Clone)
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr_local_scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start app
+        run: |
+          npm ci
+          npm run build
+          npm run start &amp; npx wait-on http://localhost:3000
+
+      - uses: github/accessibility-scanner@v3
+        with:
+          urls: |
+            http://localhost:3000
+          repository: az-digital/az_quickstart
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: az-quickstart-pr-${{ github.event.number }}-localhost.json
+          include_screenshots: true
+</code></pre>
+<h4 id="pattern-3-private-clonestage-behind-authentication">Pattern 3: Private clone/stage behind authentication</h4>
+<p>Use a reachable internal URL and pass authentication context:</p>
+<pre><code class="language-yaml">with:
+  urls: |
+    https://staging.example.arizona.edu
+  login_url: https://staging.example.arizona.edu/login
+  auth_context: ${{ secrets.A11Y_AUTH_CONTEXT }}
+</code></pre>
+<p>This supports non-public clone environments while still scanning rendered pages.</p>
+<hr />
+<h3 id="appendix-f-multi-cms-url-discovery-pattern-drupal-wordpress">Appendix F: Multi-CMS URL Discovery Pattern (Drupal + WordPress)</h3>
+<p>For mixed estates, run one discovery pipeline with CMS adapters enabled and merge outputs into one scanner input:</p>
+<pre><code class="language-yaml">- id: discover
+  uses: github/accessibility-scanner/.github/actions/discover@v3
+  with:
+    seed_urls: |
+      https://example-drupal.edu
+      https://example-wordpress.edu
+    sitemap_urls: |
+      https://example-drupal.edu/sitemap.xml
+      https://example-wordpress.edu/sitemap_index.xml
+    drupal_routes_url: https://example-drupal.edu/discovery-routes.json
+    wordpress_base_url: https://example-wordpress.edu/wp-json/wp/v2
+</code></pre>
+<p>Then hand off:</p>
+<pre><code class="language-yaml">url_configs: ${{ steps.discover.outputs.url_configs }}
+</code></pre>
+<hr />
+<h3 id="appendix-g-glow-pilot-workflow">Appendix G: GLOW Pilot Workflow</h3>
+<p>Use <code>sites/glow-discovery-scan.yml</code> as the pilot template for:
+- repo: <code>community-access/glow</code>
+- site: <code>https://www.letitglow.app</code>
+- discovery + scan in one workflow run.</p>
+<hr />
+<h2 id="document-revision-history">Document Revision History</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Author</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0</td>
+<td>2026-05-27</td>
+<td>Jeff Bishop</td>
+<td>Initial draft</td>
+</tr>
+<tr>
+<td>1.1</td>
+<td>2026-05-27</td>
+<td>Jeff Bishop</td>
+<td>Added dual-track model, execution order, cadence, non-blocking PR rollout, and dashboard vNext recommendations</td>
+</tr>
+<tr>
+<td>1.2</td>
+<td>2026-05-27</td>
+<td>Jeff Bishop</td>
+<td>Added CI execution topology, pull request run order, and concrete clone/preview/private target workflow patterns</td>
+</tr>
+<tr>
+<td>1.3</td>
+<td>2026-05-27</td>
+<td>Jeff Bishop</td>
+<td>Rewrote executive summary as definitive Axe-core + accessibility-scanner integration strategy for leadership</td>
+</tr>
+<tr>
+<td>1.4</td>
+<td>2026-05-27</td>
+<td>Jeff Bishop</td>
+<td>Expanded executive summary with phased dashboard plan, leadership reporting intent, and monthly decision framing</td>
+</tr>
+<tr>
+<td>1.5</td>
+<td>2026-05-27</td>
+<td>Jeff Bishop</td>
+<td>Added U of A Quickstart business-process alignment: role-based ownership, training integration, and ServiceNow escalation path</td>
+</tr>
+<tr>
+<td>1.6</td>
+<td>2026-05-27</td>
+<td>Jeff Bishop</td>
+<td>Clarified Playwright runtime role, added executive recheck governance, and defined dashboard column-level data model</td>
+</tr>
+<tr>
+<td>1.7</td>
+<td>2026-05-27</td>
+<td>Jeff Bishop</td>
+<td>Added automated URL discovery pipeline, discovery quality gates, and weekly URL-discovery QA cadence</td>
+</tr>
+<tr>
+<td>1.8</td>
+<td>2026-05-27</td>
+<td>Jeff Bishop</td>
+<td>Expanded executive summary with rendered-target requirement and direct jump links to core strategy, automation, cadence, deduplication, and dashboard sections</td>
+</tr>
+<tr>
+<td>1.9</td>
+<td>2026-05-27</td>
+<td>Jeff Bishop</td>
+<td>Added implemented discovery action details, mixed Drupal/WordPress pattern appendix, and GLOW pilot workflow reference</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>For questions about this plan, contact the Digital Accessibility team at <a href="mailto:accessibility@arizona.edu">accessibility@arizona.edu</a>.</em></p>
+<p><em>This document references the <a href="https://github.com/github/accessibility-scanner">GitHub Accessibility Scanner</a> (MIT License), the <a href="https://quickstart.arizona.edu">Arizona Quickstart</a> distribution maintained by <a href="https://digital.arizona.edu/">Arizona Digital</a>, and the <a href="https://github.com/accesswatch/azaccess">accesswatch/azaccess</a> prototype work.</em></p>
+</body>
+</html>
