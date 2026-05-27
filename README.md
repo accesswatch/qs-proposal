@@ -60,6 +60,16 @@ Each track:
 2. Scans discovered URLs with `github/accessibility-scanner@v3`.
 3. Files findings to `accesswatch/qs-proposal` issues.
 
+### Quickstart full-sitemap rescan workflow
+
+File: `.github/workflows/quickstart-sitemap-rescan.yml`
+
+This workflow scans Quickstart using the full sitemap chunk input checked into:
+- `scan-input/quickstart-sitemap/chunks.json`
+- `scan-input/quickstart-sitemap/chunk-*.json`
+
+It runs each chunk in parallel and writes a run summary with total URL and chunk counts.
+
 ### PR/check-in simulation workflow
 
 File: `.github/workflows/pr-checkin-simulation.yml`
@@ -124,6 +134,8 @@ Without this, many discovered URLs can redirect through `/consent?next=...`, whi
 5. Run **Dashboard Refresh**.
 6. Open `dashboard/index.html` (or publish via GitHub Pages).
 
+For full sitemap verification, run **Quickstart Full Sitemap Rescan**.
+
 ## How to simulate PR flow end-to-end
 
 1. Create a short-lived branch in this repo and open a PR.
@@ -148,3 +160,16 @@ In `.github/workflows/pilot-scan.yml`, adjust:
 
 This repo now has a runnable end-to-end operating model.  
 The only non-repo dependencies are org permissions, secrets, and scan target reachability.
+
+## Rebuilding full sitemap chunks from a local XML file
+
+If you have a local sitemap file (example: `C:\code\data.xml`), rebuild the scan input with:
+
+```bash
+node scripts/build-quickstart-sitemap-input.mjs "C:\code\data.xml" "scan-input/quickstart-sitemap" 40
+```
+
+This writes:
+- `scan-input/quickstart-sitemap/urls.txt`
+- `scan-input/quickstart-sitemap/chunks.json`
+- `scan-input/quickstart-sitemap/chunk-001.json` ... `chunk-XXX.json`

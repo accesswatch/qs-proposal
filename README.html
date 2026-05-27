@@ -69,6 +69,12 @@
 1. Discovers URLs.
 2. Scans discovered URLs with <code>github/accessibility-scanner@v3</code>.
 3. Files findings to <code>accesswatch/qs-proposal</code> issues.</p>
+<h3 id="quickstart-full-sitemap-rescan-workflow">Quickstart full-sitemap rescan workflow</h3>
+<p>File: <code>.github/workflows/quickstart-sitemap-rescan.yml</code></p>
+<p>This workflow scans Quickstart using the full sitemap chunk input checked into:
+- <code>scan-input/quickstart-sitemap/chunks.json</code>
+- <code>scan-input/quickstart-sitemap/chunk-*.json</code></p>
+<p>It runs each chunk in parallel and writes a run summary with total URL and chunk counts.</p>
 <h3 id="prcheck-in-simulation-workflow">PR/check-in simulation workflow</h3>
 <p>File: <code>.github/workflows/pr-checkin-simulation.yml</code></p>
 <p>This covers CI-style pre-merge behavior:
@@ -118,6 +124,7 @@
 <li>Run <strong>Dashboard Refresh</strong>.</li>
 <li>Open <code>dashboard/index.html</code> (or publish via GitHub Pages).</li>
 </ol>
+<p>For full sitemap verification, run <strong>Quickstart Full Sitemap Rescan</strong>.</p>
 <h2 id="how-to-simulate-pr-flow-end-to-end">How to simulate PR flow end-to-end</h2>
 <ol>
 <li>Create a short-lived branch in this repo and open a PR.</li>
@@ -139,5 +146,13 @@
 <h2 id="what-real-world-means-here">What “real world” means here</h2>
 <p>This repo now has a runnable end-to-end operating model.<br />
 The only non-repo dependencies are org permissions, secrets, and scan target reachability.</p>
+<h2 id="rebuilding-full-sitemap-chunks-from-a-local-xml-file">Rebuilding full sitemap chunks from a local XML file</h2>
+<p>If you have a local sitemap file (example: <code>C:\code\data.xml</code>), rebuild the scan input with:</p>
+<pre><code class="language-bash">node scripts/build-quickstart-sitemap-input.mjs &quot;C:\code\data.xml&quot; &quot;scan-input/quickstart-sitemap&quot; 40
+</code></pre>
+<p>This writes:
+- <code>scan-input/quickstart-sitemap/urls.txt</code>
+- <code>scan-input/quickstart-sitemap/chunks.json</code>
+- <code>scan-input/quickstart-sitemap/chunk-001.json</code> ... <code>chunk-XXX.json</code></p>
 </body>
 </html>

@@ -1,0 +1,80 @@
+name: Quickstart Full Sitemap Rescan
+
+on:
+  workflow_dispatch:
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      total_urls: ${{ steps.meta.outputs.total_urls }}
+      chunk_count: ${{ steps.meta.outputs.chunk_count }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build matrix from chunk manifest
+        id: matrix
+        shell: bash
+        run: |
+          manifest="scan-input/quickstart-sitemap/chunks.json"
+          matrix=$(jq -c '{include: [.chunks[] | {chunk_file: ., chunk_id: (capture("chunk-(?<id>[0-9]+)\\.json").id)}]}' "$manifest")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+      - name: Expose manifest metadata
+        id: meta
+        shell: bash
+        run: |
+          manifest="scan-input/quickstart-sitemap/chunks.json"
+          echo "total_urls=$(jq -r '.totalUrls' "$manifest")" >> "$GITHUB_OUTPUT"
+          echo "chunk_count=$(jq -r '.chunkCount' "$manifest")" >> "$GITHUB_OUTPUT"
+
+  scan_chunks:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load url_configs for chunk
+        id: url_configs
+        shell: bash
+        run: |
+          file="scan-input/quickstart-sitemap/${{ matrix.chunk_file }}"
+          {
+            echo 'value<<__URL_CONFIGS__'
+            cat "$file"
+            echo
+            echo '__URL_CONFIGS__'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Scan chunk ${{ matrix.chunk_id }}
+        uses: github/accessibility-scanner@v3
+        with:
+          url_configs: ${{ steps.url_configs.outputs.value }}
+          repository: accesswatch/qs-proposal
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: quickstart-arizona-edu-sitemap-chunk-${{ matrix.chunk_id }}.json
+          include_screenshots: true
+          open_grouped_issues: true
+          scans: '["axe","reflow-scan"]'
+
+  summary:
+    needs: [prepare, scan_chunks]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Write run summary
+        shell: bash
+        run: |
+          {
+            echo "## Quickstart Full Sitemap Rescan"
+            echo ""
+            echo "- Total URLs (manifest): \`${{ needs.prepare.outputs.total_urls }}\`"
+            echo "- Chunk count: \`${{ needs.prepare.outputs.chunk_count }}\`"
+            echo "- Scan completion: \`${{ needs.scan_chunks.result }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

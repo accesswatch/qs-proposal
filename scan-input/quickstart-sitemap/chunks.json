@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-05-27T23:57:43.208Z",
+  "sourcePath": "C:\\code\\data.xml",
+  "chunkSize": 40,
+  "totalUrls": 213,
+  "chunkCount": 6,
+  "chunks": [
+    "chunk-001.json",
+    "chunk-002.json",
+    "chunk-003.json",
+    "chunk-004.json",
+    "chunk-005.json",
+    "chunk-006.json"
+  ]
+}
