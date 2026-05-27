@@ -94,6 +94,21 @@
 - <code>metadata: read</code>
 - <code>actions: write</code></p>
 <p>Note: <code>github/accessibility-scanner</code> requires this token input.</p>
+<h3 id="secret-glow_auth_context-recommended-for-consent-gated-scans">Secret: <code>GLOW_AUTH_CONTEXT</code> (recommended for consent-gated scans)</h3>
+<p>Add a repository secret named <code>GLOW_AUTH_CONTEXT</code> containing scanner <code>auth_context</code> JSON so the GLOW scan can run with an accepted consent/session state.</p>
+<p>Example shape:</p>
+<pre><code class="language-json">{
+  &quot;cookies&quot;: [
+    {&quot;name&quot;:&quot;consent&quot;,&quot;value&quot;:&quot;true&quot;,&quot;domain&quot;:&quot;www.letitglow.app&quot;,&quot;path&quot;:&quot;/&quot;}
+  ],
+  &quot;localStorage&quot;: {
+    &quot;https://www.letitglow.app&quot;: {
+      &quot;consentAccepted&quot;:&quot;true&quot;
+    }
+  }
+}
+</code></pre>
+<p>Without this, many discovered URLs can redirect through <code>/consent?next=...</code>, which reduces scan fidelity.</p>
 <h2 id="run-it-now">Run it now</h2>
 <ol>
 <li>Open <strong>Actions</strong> in <code>accesswatch/qs-proposal</code>.</li>

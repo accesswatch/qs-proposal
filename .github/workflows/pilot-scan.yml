@@ -73,6 +73,7 @@ jobs:
           url_configs: ${{ steps.discover_glow.outputs.url_configs }}
           repository: accesswatch/qs-proposal
           token: ${{ secrets.GH_TOKEN }}
+          auth_context: ${{ secrets.GLOW_AUTH_CONTEXT }}
           cache_key: glow-production.json
           include_screenshots: true
           open_grouped_issues: true

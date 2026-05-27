@@ -33,6 +33,7 @@ jobs:
           url_configs: ${{ steps.discover.outputs.url_configs }}
           repository: community-access/glow
           token: ${{ secrets.GH_TOKEN }}
+          auth_context: ${{ secrets.GLOW_AUTH_CONTEXT }}
           cache_key: glow-production.json
           include_screenshots: true
           open_grouped_issues: true

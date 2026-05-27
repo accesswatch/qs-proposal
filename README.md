@@ -94,6 +94,27 @@ Add a fine-grained PAT as repository secret in `accesswatch/qs-proposal`:
 
 Note: `github/accessibility-scanner` requires this token input.
 
+### Secret: `GLOW_AUTH_CONTEXT` (recommended for consent-gated scans)
+
+Add a repository secret named `GLOW_AUTH_CONTEXT` containing scanner `auth_context` JSON so the GLOW scan can run with an accepted consent/session state.
+
+Example shape:
+
+```json
+{
+  "cookies": [
+    {"name":"consent","value":"true","domain":"www.letitglow.app","path":"/"}
+  ],
+  "localStorage": {
+    "https://www.letitglow.app": {
+      "consentAccepted":"true"
+    }
+  }
+}
+```
+
+Without this, many discovered URLs can redirect through `/consent?next=...`, which reduces scan fidelity.
+
 ## Run it now
 
 1. Open **Actions** in `accesswatch/qs-proposal`.
