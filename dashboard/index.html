@@ -23,6 +23,14 @@
     :focus-visible { outline: 3px solid #0969da; outline-offset: 2px; }
     .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
     caption { text-align: left; padding: 8px 10px; font-weight: 600; }
+    .run-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+    .run-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px; border: 1px solid #d8dee4; border-radius: 8px; background: #fff; }
+    .run-meta { font-size: 13px; color: #57606a; }
+    .badge { display: inline-block; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 600; }
+    .badge-running { background: #fff8c5; color: #7a5d00; }
+    .badge-completed { background: #dafbe1; color: #1a7f37; }
+    .badge-failed { background: #ffebe9; color: #cf222e; }
+    .badge-queued { background: #ddf4ff; color: #0550ae; }
   </style>
 </head>
 <body>
@@ -36,6 +44,12 @@
     <section aria-labelledby="summary-heading">
       <h2 id="summary-heading">Executive Summary</h2>
       <div class="grid" id="summary"></div>
+    </section>
+
+    <section aria-labelledby="scan-status-heading">
+      <h2 id="scan-status-heading">Live Scan Status</h2>
+      <p id="scan-status-updated" class="note" aria-live="polite">Checking workflow runs…</p>
+      <ul class="run-list" id="scan-runs"></ul>
     </section>
 
     <section aria-labelledby="trend-heading">
@@ -70,6 +84,46 @@
   </main>
 
   <script>
+    const RUNS_API = 'https://api.github.com/repos/accesswatch/qs-proposal/actions/runs?per_page=10';
+
+    function formatRunStatus(run) {
+      if (run.status === 'queued') return {label: 'Queued', cls: 'badge-queued'};
+      if (run.status === 'in_progress') return {label: 'In progress', cls: 'badge-running'};
+      if (run.conclusion === 'success') return {label: 'Completed', cls: 'badge-completed'};
+      if (run.conclusion) return {label: `Completed (${run.conclusion})`, cls: 'badge-failed'};
+      return {label: run.status || 'Unknown', cls: 'badge-queued'};
+    }
+
+    async function loadRunStatus() {
+      const list = document.getElementById('scan-runs');
+      const updated = document.getElementById('scan-status-updated');
+      try {
+        const res = await fetch(RUNS_API, {headers: {Accept: 'application/vnd.github+json'}});
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const payload = await res.json();
+        const runs = (payload.workflow_runs || []).filter(run =>
+          ['Pilot Accessibility Scan (Quickstart + GLOW)', 'PR Check-in Accessibility Simulation', 'Dashboard Refresh'].includes(run.name),
+        );
+        list.innerHTML = runs.slice(0, 5).map(run => {
+          const status = formatRunStatus(run);
+          return `
+            <li class="run-item">
+              <div>
+                <div><strong>${run.name}</strong></div>
+                <div class="run-meta">Run #${run.run_number} · ${new Date(run.created_at).toLocaleString()}</div>
+                <div class="run-meta"><a href="${run.html_url}" target="_blank" rel="noopener noreferrer">Open run details</a></div>
+              </div>
+              <span class="badge ${status.cls}" aria-label="Run status">${status.label}</span>
+            </li>
+          `;
+        }).join('') || '<li class="run-item"><div>No runs found.</div></li>';
+        updated.textContent = `Run status refreshed ${new Date().toLocaleTimeString()}.`;
+      } catch (error) {
+        list.innerHTML = '<li class="run-item"><div>Unable to load run status right now.</div></li>';
+        updated.textContent = `Run status refresh failed: ${String(error)}.`;
+      }
+    }
+
     async function load() {
       const status = document.getElementById('loading-status');
       let data;
@@ -106,6 +160,8 @@
       status.textContent = `Dashboard data loaded. Last updated ${new Date(data.generatedAt || Date.now()).toLocaleString()}.`;
     }
     load();
+    loadRunStatus();
+    setInterval(loadRunStatus, 60000);
   </script>
 </body>
 </html>
