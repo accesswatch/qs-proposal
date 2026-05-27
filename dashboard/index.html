@@ -18,40 +18,60 @@
     th { background: #f6f8fa; font-size: 13px; }
     .spark { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; background: #fff; border: 1px solid #d0d7de; border-radius: 8px; padding: 12px; }
     .note { font-size: 13px; color: #57606a; margin-top: 8px; }
+    .skip-link { position: absolute; left: -9999px; top: 0; background: #fff; color: #1f2328; padding: 8px 12px; border: 2px solid #1f2328; border-radius: 6px; z-index: 10; }
+    .skip-link:focus { left: 12px; top: 12px; }
+    :focus-visible { outline: 3px solid #0969da; outline-offset: 2px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+    caption { text-align: left; padding: 8px 10px; font-weight: 600; }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <header>
     <h1 style="margin:0;font-size:22px;">Quickstart Accessibility Dashboard</h1>
-    <div style="opacity:.9;">Pilot metrics for trend, risk concentration, and remediation progress</div>
+    <p style="opacity:.9;margin:6px 0 0;">Pilot metrics for trend, risk concentration, and remediation progress</p>
   </header>
-  <main>
-    <section class="grid" id="summary"></section>
+  <main id="main-content" tabindex="-1">
+    <p id="loading-status" role="status" aria-live="polite">Loading dashboard data…</p>
+    <section aria-labelledby="summary-heading">
+      <h2 id="summary-heading">Executive Summary</h2>
+      <div class="grid" id="summary"></div>
+    </section>
 
-    <h2>90-Day Trend</h2>
-    <div class="spark" id="trend"></div>
+    <section aria-labelledby="trend-heading">
+      <h2 id="trend-heading">90-Day Trend</h2>
+      <div class="spark" id="trend" role="img" aria-describedby="trend-description"></div>
+      <p id="trend-description" class="sr-only">Weekly open and closed issue totals over the last eight weeks.</p>
+    </section>
 
-    <h2>Top Violations</h2>
-    <table>
-      <thead><tr><th>Rule ID</th><th>Open Findings</th></tr></thead>
-      <tbody id="violations"></tbody>
-    </table>
+    <section aria-labelledby="violations-heading">
+      <h2 id="violations-heading">Top Violations</h2>
+      <table>
+        <caption>Most frequent accessibility rule violations</caption>
+        <thead><tr><th scope="col">Rule ID</th><th scope="col">Open Findings</th></tr></thead>
+        <tbody id="violations"></tbody>
+      </table>
+    </section>
 
-    <h2>Site Scorecard</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Site</th><th>Critical</th><th>Serious</th><th>Moderate</th><th>Minor</th>
-        </tr>
-      </thead>
-      <tbody id="scorecard"></tbody>
-    </table>
+    <section aria-labelledby="scorecard-heading">
+      <h2 id="scorecard-heading">Site Scorecard</h2>
+      <table>
+        <caption>Issue counts by site and severity</caption>
+        <thead>
+          <tr>
+            <th scope="col">Site</th><th scope="col">Critical</th><th scope="col">Serious</th><th scope="col">Moderate</th><th scope="col">Minor</th>
+          </tr>
+        </thead>
+        <tbody id="scorecard"></tbody>
+      </table>
+    </section>
 
     <p class="note">Data source preference: <code>dashboard/data/latest.json</code> (fallback: <code>dashboard/data/sample-metrics.json</code>).</p>
   </main>
 
   <script>
     async function load() {
+      const status = document.getElementById('loading-status');
       let data;
       try {
         const latest = await fetch('./data/latest.json');
@@ -70,7 +90,7 @@
         ['MTTR (days)', data.summary.mttrDays]
       ];
       document.getElementById('summary').innerHTML = cards.map(([k, v]) =>
-        `<div class="card"><div class="label">${k}</div><div class="value">${v}</div></div>`
+        `<article class="card"><h3 class="label">${k}</h3><p class="value">${v}</p></article>`
       ).join('');
 
       const trendLines = data.trend90d.map(p => `${p.period.padEnd(3)} | Open ${String(p.openIssues).padStart(3)} | Closed ${String(p.closedIssues).padStart(3)}`);
@@ -82,6 +102,8 @@
       document.getElementById('scorecard').innerHTML = data.siteScorecard
         .map(s => `<tr><td>${s.site}</td><td>${s.critical}</td><td>${s.serious}</td><td>${s.moderate}</td><td>${s.minor}</td></tr>`)
         .join('');
+
+      status.textContent = `Dashboard data loaded. Last updated ${new Date(data.generatedAt || Date.now()).toLocaleString()}.`;
     }
     load();
   </script>
