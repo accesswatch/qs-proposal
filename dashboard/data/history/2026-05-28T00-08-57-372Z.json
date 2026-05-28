@@ -1,0 +1,103 @@
+{
+  "generatedAt": "2026-05-28T00:08:57.341Z",
+  "summary": {
+    "healthScore": 0,
+    "openIssues": 500,
+    "highImpactOpen": 439,
+    "regressionRate": 1,
+    "mttrDays": 0
+  },
+  "trend90d": [
+    {
+      "period": "W1",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W2",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W3",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W4",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W5",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W6",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W7",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W8",
+      "openIssues": 500,
+      "closedIssues": 0
+    }
+  ],
+  "topViolations": [
+    {
+      "ruleId": "landmark-contentinfo-is-top-level",
+      "count": 100
+    },
+    {
+      "ruleId": "list",
+      "count": 99
+    },
+    {
+      "ruleId": "landmark-unique",
+      "count": 99
+    },
+    {
+      "ruleId": "landmark-no-duplicate-contentinfo",
+      "count": 99
+    },
+    {
+      "ruleId": "heading-order",
+      "count": 36
+    },
+    {
+      "ruleId": "page-has-heading-one",
+      "count": 15
+    },
+    {
+      "ruleId": "region",
+      "count": 10
+    },
+    {
+      "ruleId": "landmark-one-main",
+      "count": 10
+    },
+    {
+      "ruleId": "html-has-lang",
+      "count": 10
+    },
+    {
+      "ruleId": "document-title",
+      "count": 10
+    }
+  ],
+  "siteScorecard": [
+    {
+      "site": "quickstart.arizona.edu",
+      "critical": 5,
+      "serious": 434,
+      "moderate": 61,
+      "minor": 0
+    }
+  ]
+}

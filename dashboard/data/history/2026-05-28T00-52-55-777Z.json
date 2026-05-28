@@ -1,68 +1,19 @@
 {
-  "generatedAt": "2026-05-28T02:47:03.035Z",
+  "generatedAt": "2026-05-28T00:52:55.735Z",
   "summary": {
     "healthScore": 100,
     "openIssues": 0,
     "highImpactOpen": 0,
-    "regressionRate": 0,
+    "regressionRate": 500,
     "mttrDays": 0
   },
   "remediationProgress": {
     "hasBaseline": true,
-    "previousGeneratedAt": "2026-05-28T01:00:04.044Z",
-    "openDelta": 0,
-    "highImpactDelta": 0,
-    "healthDelta": 0,
-    "summary": "Open issues 0, high-impact 0, health score 0 since previous snapshot."
-  },
-  "validationWins": {
-    "trackedRuleCount": 13,
-    "rulesCurrentlyClean": 13,
-    "cleanRuleSharePercent": 100,
-    "closedFindingsLast30d": 500,
-    "closedFindingsTotal": 500,
-    "resolvedRulesTop": [
-      {
-        "ruleId": "landmark-contentinfo-is-top-level",
-        "closedCount": 100
-      },
-      {
-        "ruleId": "list",
-        "closedCount": 99
-      },
-      {
-        "ruleId": "landmark-unique",
-        "closedCount": 99
-      },
-      {
-        "ruleId": "landmark-no-duplicate-contentinfo",
-        "closedCount": 99
-      },
-      {
-        "ruleId": "heading-order",
-        "closedCount": 36
-      },
-      {
-        "ruleId": "page-has-heading-one",
-        "closedCount": 15
-      },
-      {
-        "ruleId": "region",
-        "closedCount": 10
-      },
-      {
-        "ruleId": "landmark-one-main",
-        "closedCount": 10
-      },
-      {
-        "ruleId": "html-has-lang",
-        "closedCount": 10
-      },
-      {
-        "ruleId": "document-title",
-        "closedCount": 10
-      }
-    ]
+    "previousGeneratedAt": "2026-05-28T00:37:21.704Z",
+    "openDelta": -370,
+    "highImpactDelta": -313,
+    "healthDelta": 100,
+    "summary": "Open issues -370, high-impact -313, health score +100 since previous snapshot."
   },
   "qualityControls": {
     "rawOpenIssues": 0,
@@ -80,15 +31,15 @@
       "workflowPath": ".github/workflows/configurable-scan.yml",
       "githubActionsUrl": "https://github.com/accesswatch/qs-proposal/actions/workflows/configurable-scan.yml",
       "ghCliExamples": [
-        "gh workflow run configurable-scan.yml -R accesswatch/qs-proposal -f target=quickstart -f scan_mode=delta -f rule_profile=focused-rules -f run_source=frontend -f file_issues=false",
-        "gh workflow run configurable-scan.yml -R accesswatch/qs-proposal -f target=quickstart -f scan_mode=complete -f rule_profile=all-rules -f run_source=admin -f file_issues=true"
+        "gh workflow run configurable-scan.yml -R accesswatch/qs-proposal -f target=quickstart -f scan_mode=delta -f rule_profile=focused-rules -f run_source=frontend",
+        "gh workflow run configurable-scan.yml -R accesswatch/qs-proposal -f target=quickstart -f scan_mode=complete -f rule_profile=all-rules -f run_source=admin"
       ]
     },
     "profiles": [
       {
         "profileId": "complete-baseline",
         "label": "Complete Baseline Scan",
-        "triggerType": "Admin manual run",
+        "triggerType": "Admin schedule or manual",
         "scanMode": "complete",
         "ruleProfile": "all-rules",
         "behavior": "Runs full crawl/rule coverage and refreshes full issue truth.",
@@ -108,7 +59,7 @@
       {
         "profileId": "complete-fast",
         "label": "Complete Fast (Axe Only)",
-        "triggerType": "Admin manual run",
+        "triggerType": "Admin schedule",
         "scanMode": "complete",
         "ruleProfile": "axe-only",
         "behavior": "Runs complete signature coverage without reflow scan to shorten runtime.",
@@ -125,14 +76,14 @@
         "estimatedNoiseReductionPercent": 0
       },
       {
-        "combination": "Admin manual: complete baseline",
+        "combination": "Admin schedule: complete baseline",
         "objective": "Authoritative risk snapshot",
         "estimatedRuntimeMinutes": 20,
         "expectedSignal": "Full risk, trend, and scorecard updates",
         "estimatedNoiseReductionPercent": 0
       },
       {
-        "combination": "Admin manual: complete fast",
+        "combination": "Admin schedule: complete fast",
         "objective": "Daily regression watch with lower runtime",
         "estimatedRuntimeMinutes": 15,
         "expectedSignal": "Broad detection with lower scan cost",

@@ -18,12 +18,58 @@
 <body>
 <h1 id="qs-proposal-real-world-accessibility-pilot-stack">QS Proposal: Real-World Accessibility Pilot Stack</h1>
 <p>This repo is a production-style proposal package for the Quickstart team to review and run.</p>
-<p>It includes:
-1. A dual-track scanning model (PR CI + live-site monitoring).
-2. Automated URL discovery (sitemap + crawl + Drupal/WordPress adapters).
-3. Pilot workflows for GLOW and Quickstart.
-4. Dashboard generation and publishing-ready artifacts.
-5. Strategic planning docs in both Markdown and HTML.</p>
+<p>It includes:</p>
+<ol>
+<li>A dual-track scanning model (PR CI + live-site monitoring).</li>
+<li>Automated URL discovery (sitemap + crawl + Drupal/WordPress adapters).</li>
+<li>Pilot workflows for GLOW and Quickstart.</li>
+<li>Dashboard generation and publishing-ready artifacts.</li>
+<li>Strategic planning docs in both Markdown and HTML.</li>
+</ol>
+<h2 id="program-status-note-may-2026">Program status note (May 2026)</h2>
+<p>This <code>qs-proposal</code> repo is the planning and reporting source of truth for the current remediation wave.</p>
+<p>Latest tracked status:</p>
+<ol>
+<li>DRC reported <strong>2026 potential issues this week</strong> via two CSV files (<code>Summary</code> + <code>Detail</code>), totaling <strong>346 occurrences</strong> across <strong>10 issue IDs</strong>.</li>
+<li>High/medium-confidence remediation work was opened upstream in <code>az-digital/az_quickstart</code>:
+<ul>
+<li>PR #5639 (<code>accessibility-fixes-high-confidence</code>)</li>
+<li>PR #5640 (<code>accessibility-fixes-medium-confidence</code>)</li>
+<li>PR #5641 (<code>accessibility-fixes-button-names</code>)</li>
+<li>PR #5642 (<code>accessibility-fixes-mobile-nav-callback</code>)</li>
+<li>PR #5643 (<code>accessibility-fixes-carousel-aria</code>)</li>
+<li>PR #5644 (<code>accessibility-fixes-high-confidence-round2</code>)</li>
+<li>PR #5645 (<code>accessibility-fixes-high-confidence-round3</code>)</li>
+</ul></li>
+<li>CI/workflow reliability fixes were applied where needed:
+<ul>
+<li>Composer audit check now distinguishes true vulnerability failures from abandoned-package-only output.</li>
+<li>Carousel JS lint failures were corrected.</li>
+</ul></li>
+<li>Tugboat preview coverage is now available for PR #5639-#5645, including PR #5639 (<code>https://pr5639-qxgkrp3cc8zfunxaiz5kh7tdzpqof0tk.tugboatqa.com</code>).</li>
+<li>Before/after reporting is scoped to the same URL set; projected impact remains pending post-merge verification scans.</li>
+</ol>
+<h2 id="for-az-digital-team-members">For az-digital team members</h2>
+<p>This repository is the <strong>program operations and reporting repo</strong> for the Quickstart accessibility effort.</p>
+<p>Use it for:</p>
+<ol>
+<li>Reviewing current remediation status, PR mapping, and rollout notes.</li>
+<li>Running scanner workflows and discovery workflows.</li>
+<li>Refreshing dashboard snapshots and leadership reporting artifacts.</li>
+</ol>
+<p>Do not use it for:</p>
+<ol>
+<li>Shipping Quickstart product code changes (those belong in <code>az-digital/az_quickstart</code> PRs).</li>
+<li>Treating projected reduction values as final closure without same-scope verification rescans.</li>
+</ol>
+<p>Recommended operating flow for the az-digital team:</p>
+<ol>
+<li>Review open PR wave status (#5639-#5645) and Tugboat previews.</li>
+<li>Run scan workflows in non-filing mode first (<code>file_issues=false</code>) for signal quality checks.</li>
+<li>Enable filing only for intentional remediation cycles (<code>file_issues=true</code>).</li>
+<li>Run Dashboard Refresh after each validated cycle.</li>
+<li>Use refreshed snapshots for leadership readouts and weekly governance review.</li>
+</ol>
 <h2 id="stack-overview">Stack overview</h2>
 <h3 id="1-discovery-layer">1) Discovery layer</h3>
 <ul>
@@ -45,6 +91,11 @@
 <h3 id="3-reportingdashboard-layer">3) Reporting/dashboard layer</h3>
 <ul>
 <li>Dashboard app: <code>dashboard/index.html</code></li>
+<li>Includes rule-level online help links and drill-in scenario guidance for top/repeated violations.</li>
+<li>Includes an Action Center with prioritized fixes, likely owner teams, likely fix areas, and one-click issue drafts.</li>
+<li>Action Center now groups by fixable pattern (not per-instance noise) and includes occurrence/path blast radius for actionable issue drafts.</li>
+<li>Includes remediation tracking deltas between snapshots and dedupe/ignore guardrails so repeated or ignored findings do not inflate executive metrics.</li>
+<li>Includes Validation Wins panels so rule passes/resolved rules are visible alongside failures.</li>
 <li>Data files:</li>
 <li><code>dashboard/data/latest.json</code></li>
 <li><code>dashboard/data/history/*.json</code></li>
@@ -67,8 +118,8 @@
 2. <strong>GLOW</strong> (<code>https://www.letitglow.app</code>)</p>
 <p>Each track:
 1. Discovers URLs.
-2. Scans discovered URLs with <code>github/accessibility-scanner@v3</code>.
-3. Files findings to <code>accesswatch/qs-proposal</code> issues.</p>
+2. Scans discovered URLs with <code>github/accessibility-scanner@v3</code> only when <code>file_issues=true</code>.
+3. Keeps issue filing manual-only by default (<code>file_issues=false</code>).</p>
 <h3 id="quickstart-full-sitemap-rescan-workflow">Quickstart full-sitemap rescan workflow</h3>
 <p>File: <code>.github/workflows/quickstart-sitemap-rescan.yml</code></p>
 <p>This workflow scans Quickstart using the full sitemap chunk input checked into:
@@ -78,19 +129,28 @@
 <h3 id="prcheck-in-simulation-workflow">PR/check-in simulation workflow</h3>
 <p>File: <code>.github/workflows/pr-checkin-simulation.yml</code></p>
 <p>This covers CI-style pre-merge behavior:
-1. Runs on <code>pull_request</code> and <code>workflow_dispatch</code>.
+1. Runs on <code>workflow_dispatch</code> only.
 2. Discovers URLs from a target rendered endpoint.
-3. Runs scanner with non-blocking or enforced mode.
+3. Runs scanner with non-blocking or enforced mode when <code>file_issues=true</code>.
 4. Publishes a step summary showing target, URL count, mode, and outcome.</p>
-<p>Default PR target is <code>https://quickstart.arizona.edu</code>, and workflow-dispatch lets you pass any preview/staging URL.</p>
+<p>Default target is <code>https://quickstart.arizona.edu</code>, and workflow-dispatch lets you pass any preview/staging URL.</p>
 <h3 id="dashboard-refresh-workflow">Dashboard refresh workflow</h3>
 <p>File: <code>.github/workflows/dashboard-refresh.yml</code></p>
 <ol>
 <li>Pulls current issue state from <code>accesswatch/qs-proposal</code>.</li>
 <li>Recomputes summary metrics and top violations.</li>
-<li>Writes <code>dashboard/data/latest.json</code>.</li>
+<li>Writes <code>dashboard/data/latest.json</code> with executive brief + drill-downs + action center + scan operations simulation.</li>
 <li>Appends timestamped history snapshot.</li>
+<li>Generates static email-ready report at <code>dashboard/static/latest-report.html</code>.</li>
 </ol>
+<h3 id="configurable-scan-workflow-frontendmanualadmin">Configurable scan workflow (frontend/manual/admin)</h3>
+<p>File: <code>.github/workflows/configurable-scan.yml</code></p>
+<p>This workflow supports mixed operating modes from one entrypoint:
+1. <strong>workflow_dispatch</strong> for frontend/manual launch requests.
+2. <strong>Mode options</strong>: <code>delta</code> (new-issue-focused) and <code>complete</code> (authoritative full scan).
+3. <strong>Rule profiles</strong>: <code>focused-rules</code>, <code>all-rules</code>, and <code>axe-only</code>.
+4. <strong>Issue filing control</strong>: <code>file_issues</code> (default <code>false</code>) to prevent automatic issue creation.
+5. Publishes run summary with selected combination and discovered URL count.</p>
 <h2 id="required-setup">Required setup</h2>
 <h3 id="secret-gh_token">Secret: <code>GH_TOKEN</code></h3>
 <p>Add a fine-grained PAT as repository secret in <code>accesswatch/qs-proposal</code>:
@@ -118,11 +178,13 @@
 <h2 id="run-it-now">Run it now</h2>
 <ol>
 <li>Open <strong>Actions</strong> in <code>accesswatch/qs-proposal</code>.</li>
-<li>Run <strong>Pilot Accessibility Scan (Quickstart + GLOW)</strong>.</li>
-<li>Review created issues.</li>
+<li>Run <strong>Pilot Accessibility Scan (Quickstart + GLOW)</strong> for discovery/scan readiness.</li>
 <li>Run <strong>PR Check-in Accessibility Simulation</strong> to test CI-style behavior.</li>
+<li>Run <strong>Configurable Accessibility Scan</strong> for frontend/admin mode combinations.</li>
+<li>Set <code>file_issues=true</code> only when you intentionally want issue creation.</li>
 <li>Run <strong>Dashboard Refresh</strong>.</li>
 <li>Open <code>dashboard/index.html</code> (or publish via GitHub Pages).</li>
+<li>Open <code>dashboard/static/latest-report.html</code> for email/share snapshots.</li>
 </ol>
 <p>For full sitemap verification, run <strong>Quickstart Full Sitemap Rescan</strong>.</p>
 <h2 id="how-to-simulate-pr-flow-end-to-end">How to simulate PR flow end-to-end</h2>
@@ -132,6 +194,7 @@
 <li>For manual simulation, run the workflow with:</li>
 <li><code>target_url</code> = preview/staging/live rendered endpoint</li>
 <li><code>non_blocking</code> = <code>true</code> first, then <code>false</code> for gate rehearsal</li>
+<li><code>file_issues</code> = <code>false</code> for dry-runs, <code>true</code> only for intentional filing</li>
 <li>Review run summary + filed issues.</li>
 <li>Use this to tune rule thresholds and blocking policy before upstream rollout.</li>
 </ol>

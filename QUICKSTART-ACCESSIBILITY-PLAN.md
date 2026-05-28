@@ -4,7 +4,7 @@
 **Prepared by:** Jeff Bishop (accesswatch), Digital Accessibility  
 **Date:** May 27, 2026  
 **Version:** 1.9  
-**Status:** Draft for Review
+**Status:** Active Implementation Update (May 2026)
 
 ---
 
@@ -13,7 +13,7 @@
 This plan recommends a **definitive dual-track accessibility strategy** for Arizona Quickstart:
 
 1. **Axe-core in CI (pre-merge):** Run Axe-core checks on pull requests against rendered preview/build outputs to catch regressions before code lands.
-2. **`github/accessibility-scanner@v3` on live URLs (post-merge + scheduled):** Continuously scan real rendered pages in production/staging, file and deduplicate issues, and track trends over time.
+2. **`github/accessibility-scanner@v3` on live URLs (post-merge + scheduled/manual):** Continuously scan real rendered pages in production/staging and track trends over time.
 
 This is the highest-confidence model for a Drupal-based platform: **CI prevents new defects; live scanning catches real-world/content/integration defects that source-only checks miss.**
 
@@ -21,7 +21,7 @@ Both tracks require a **rendered web target** (preview URL, CI-hosted localhost 
 
 The scanner implementation provides:
 - Rendered-page scanning with axe-core + Playwright (Playwright opens real browser pages, executes page rendering/JS, and provides the DOM state Axe evaluates)
-- Automatic issue filing, grouping, and deduplication (`cache_key`, `open_grouped_issues`)
+- Manual-only issue filing via explicit workflow input (`file_issues=true`), with dedup/noise controls (`cache_key`, `open_grouped_issues`)
 - Optional Copilot issue assignment (not required)
 - Structured outputs (`results_file`) for dashboards, KPI tracking, and training insights
 
@@ -36,6 +36,16 @@ The scanner implementation provides:
 4. **Operational automation:** Weekly snapshot generation plus monthly leadership reporting packets.
 
 This dashboard is designed to answer three leadership questions every month: **Are we improving, where is risk concentrated, and what fixes are working across teams?**
+
+### Current execution status (May 2026)
+
+This strategy moved from design into active execution this week:
+
+1. DRC reported **2026 potential issues** (2 CSV files) totaling **346 occurrences** across **10 issue IDs**.
+2. A focused remediation set is open upstream in `az-digital/az_quickstart` (PR #5639 through PR #5645) covering high and medium confidence fixes.
+3. CI reliability improvements were added in-flight (composer-audit handling and carousel lint normalization) to keep checks actionable.
+4. Tugboat preview URLs are posted for PR #5640-#5645; PR #5639 still needs a public preview URL for full route-by-route comparison.
+5. Final impact is still gated on post-merge verification scans using the same route inventory to produce measured before/after deltas.
 
 **Strategic checkpoint (executive recheck):** Recheck status of previously identified high-impact issues at the executive monthly review, including reopened findings and unresolved exceptions, so "known risk" stays visible until fixed or formally accepted.
 
@@ -598,6 +608,19 @@ Add these views to turn data into behavior change:
 | **Exception Debt Tracker** | Counts temporary exceptions, age, owner, and expiration date to prevent permanent debt |
 
 **Implementation note:** Build this with static JSON snapshots + GitHub Pages (no new paid tooling required).
+
+### Configurable scan operations (frontend + admin)
+
+Support both user-fired and admin-scheduled combinations through one configurable workflow:
+
+| Capability | Approach |
+|---|---|
+| Frontend/manual launch | `workflow_dispatch` with profile inputs (`target`, `scan_mode`, `rule_profile`, depth/URL caps) |
+| Admin recurring operations | `schedule` with fixed matrix combinations (for example delta daytime + complete nightly) |
+| Complete mode | Authoritative full coverage scan used for baseline and governance |
+| Delta mode | New-issue-focused lower-noise run used for quick triage/rechecks |
+| Noise handling | Persist known signatures as "still open" state in dashboard; do not re-alert as new |
+| Static executive distribution | Generate `dashboard/static/latest-report.html` on each dashboard refresh for email/share |
 
 ### Dashboard delivery plan (phased)
 

@@ -21,19 +21,19 @@
 <strong>Prepared by:</strong> Jeff Bishop (accesswatch), Digital Accessibility<br />
 <strong>Date:</strong> May 27, 2026<br />
 <strong>Version:</strong> 1.9<br />
-<strong>Status:</strong> Draft for Review</p>
+<strong>Status:</strong> Active Implementation Update (May 2026)</p>
 <hr />
 <h2 id="executive-summary">Executive Summary</h2>
 <p>This plan recommends a <strong>definitive dual-track accessibility strategy</strong> for Arizona Quickstart:</p>
 <ol>
 <li><strong>Axe-core in CI (pre-merge):</strong> Run Axe-core checks on pull requests against rendered preview/build outputs to catch regressions before code lands.</li>
-<li><strong><code>github/accessibility-scanner@v3</code> on live URLs (post-merge + scheduled):</strong> Continuously scan real rendered pages in production/staging, file and deduplicate issues, and track trends over time.</li>
+<li><strong><code>github/accessibility-scanner@v3</code> on live URLs (post-merge + scheduled/manual):</strong> Continuously scan real rendered pages in production/staging and track trends over time.</li>
 </ol>
 <p>This is the highest-confidence model for a Drupal-based platform: <strong>CI prevents new defects; live scanning catches real-world/content/integration defects that source-only checks miss.</strong></p>
 <p>Both tracks require a <strong>rendered web target</strong> (preview URL, CI-hosted localhost clone, staging, or production URL). They do <strong>not</strong> require public production targets for every run.</p>
 <p>The scanner implementation provides:
 - Rendered-page scanning with axe-core + Playwright (Playwright opens real browser pages, executes page rendering/JS, and provides the DOM state Axe evaluates)
-- Automatic issue filing, grouping, and deduplication (<code>cache_key</code>, <code>open_grouped_issues</code>)
+- Manual-only issue filing via explicit workflow input (<code>file_issues=true</code>), with dedup/noise controls (<code>cache_key</code>, <code>open_grouped_issues</code>)
 - Optional Copilot issue assignment (not required)
 - Structured outputs (<code>results_file</code>) for dashboards, KPI tracking, and training insights</p>
 <p><strong>Executive outcome:</strong> Accessibility becomes an operational system, not a one-time audit — with measurable regression prevention, prioritized remediation, and leadership-ready trend reporting.</p>
@@ -44,6 +44,15 @@
 3. <strong>Training and awareness:</strong> "What we learned" feed, accepted fix patterns, before/after examples.
 4. <strong>Operational automation:</strong> Weekly snapshot generation plus monthly leadership reporting packets.</p>
 <p>This dashboard is designed to answer three leadership questions every month: <strong>Are we improving, where is risk concentrated, and what fixes are working across teams?</strong></p>
+<h3 id="current-execution-status-may-2026">Current execution status (May 2026)</h3>
+<p>This strategy moved from design into active execution this week:</p>
+<ol>
+<li>DRC reported <strong>2026 potential issues</strong> (2 CSV files) totaling <strong>346 occurrences</strong> across <strong>10 issue IDs</strong>.</li>
+<li>A focused remediation set is open upstream in <code>az-digital/az_quickstart</code> (PR #5639 through PR #5645) covering high and medium confidence fixes.</li>
+<li>CI reliability improvements were added in-flight (composer-audit handling and carousel lint normalization) to keep checks actionable.</li>
+<li>Tugboat preview URLs are posted for PR #5640-#5645; PR #5639 still needs a public preview URL for full route-by-route comparison.</li>
+<li>Final impact is still gated on post-merge verification scans using the same route inventory to produce measured before/after deltas.</li>
+</ol>
 <p><strong>Strategic checkpoint (executive recheck):</strong> Recheck status of previously identified high-impact issues at the executive monthly review, including reopened findings and unresolved exceptions, so "known risk" stays visible until fixed or formally accepted.</p>
 <p><strong>Executive quick links (details below):</strong>
 - <a href="#21-dual-track-coverage-model-both-paths">Dual-track strategy and operating model</a>
@@ -901,6 +910,42 @@ results_file JSON
 </tbody>
 </table>
 <p><strong>Implementation note:</strong> Build this with static JSON snapshots + GitHub Pages (no new paid tooling required).</p>
+<h3 id="configurable-scan-operations-frontend-admin">Configurable scan operations (frontend + admin)</h3>
+<p>Support both user-fired and admin-scheduled combinations through one configurable workflow:</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Approach</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend/manual launch</td>
+<td><code>workflow_dispatch</code> with profile inputs (<code>target</code>, <code>scan_mode</code>, <code>rule_profile</code>, depth/URL caps)</td>
+</tr>
+<tr>
+<td>Admin recurring operations</td>
+<td><code>schedule</code> with fixed matrix combinations (for example delta daytime + complete nightly)</td>
+</tr>
+<tr>
+<td>Complete mode</td>
+<td>Authoritative full coverage scan used for baseline and governance</td>
+</tr>
+<tr>
+<td>Delta mode</td>
+<td>New-issue-focused lower-noise run used for quick triage/rechecks</td>
+</tr>
+<tr>
+<td>Noise handling</td>
+<td>Persist known signatures as &quot;still open&quot; state in dashboard; do not re-alert as new</td>
+</tr>
+<tr>
+<td>Static executive distribution</td>
+<td>Generate <code>dashboard/static/latest-report.html</code> on each dashboard refresh for email/share</td>
+</tr>
+</tbody>
+</table>
 <h3 id="dashboard-delivery-plan-phased">Dashboard delivery plan (phased)</h3>
 <table>
 <thead>

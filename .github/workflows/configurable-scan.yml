@@ -1,0 +1,160 @@
+name: Configurable Accessibility Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Scan target profile
+        required: true
+        default: quickstart
+        type: choice
+        options:
+          - quickstart
+          - glow
+          - custom
+      custom_target_url:
+        description: Custom target URL (required only when target=custom)
+        required: false
+        type: string
+      scan_mode:
+        description: Scan mode
+        required: true
+        default: delta
+        type: choice
+        options:
+          - delta
+          - complete
+      rule_profile:
+        description: Rule profile
+        required: true
+        default: focused-rules
+        type: choice
+        options:
+          - focused-rules
+          - all-rules
+          - axe-only
+      run_source:
+        description: Trigger source
+        required: true
+        default: frontend
+        type: choice
+        options:
+          - frontend
+          - admin
+          - manual
+      file_issues:
+        description: Create GitHub issues from findings (manual only)
+        required: true
+        default: false
+        type: boolean
+      max_urls:
+        description: Max URLs override (optional)
+        required: false
+        type: string
+      max_depth:
+        description: Max crawl depth override (optional)
+        required: false
+        type: string
+
+jobs:
+  dispatch_profile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve target and scan policy
+        id: policy
+        shell: bash
+        run: |
+          target="${{ inputs.target }}"
+          custom="${{ inputs.custom_target_url }}"
+          mode="${{ inputs.scan_mode }}"
+          profile="${{ inputs.rule_profile }}"
+          max_urls_input="${{ inputs.max_urls }}"
+          max_depth_input="${{ inputs.max_depth }}"
+
+          if [[ "$target" == "quickstart" ]]; then
+            target_url="https://quickstart.arizona.edu"
+            include_domains="quickstart.arizona.edu"
+            sitemap_url="https://quickstart.arizona.edu/sitemap.xml"
+          elif [[ "$target" == "glow" ]]; then
+            target_url="https://www.letitglow.app"
+            include_domains="www.letitglow.app"
+            sitemap_url="https://www.letitglow.app/sitemap.xml"
+          else
+            if [[ -z "$custom" ]]; then
+              echo "custom_target_url is required when target=custom" >&2
+              exit 1
+            fi
+            target_url="$custom"
+            include_domains=$(echo "$custom" | sed -E 's#https?://([^/]+)/?.*#\1#')
+            sitemap_url=""
+          fi
+
+          if [[ "$mode" == "delta" ]]; then
+            default_max_urls="60"
+            default_max_depth="1"
+          else
+            default_max_urls="180"
+            default_max_depth="2"
+          fi
+
+          max_urls="${max_urls_input:-$default_max_urls}"
+          max_depth="${max_depth_input:-$default_max_depth}"
+
+          {
+            echo "target_url=$target_url"
+            echo "include_domains=$include_domains"
+            echo "sitemap_url=$sitemap_url"
+            echo "max_urls=$max_urls"
+            echo "max_depth=$max_depth"
+            echo "scan_mode=$mode"
+            echo "rule_profile=$profile"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Discover URLs
+        id: discover
+        uses: ./.github/actions/discover
+        with:
+          seed_urls: |
+            ${{ steps.policy.outputs.target_url }}
+          sitemap_urls: |
+            ${{ steps.policy.outputs.sitemap_url }}
+          include_domains: |
+            ${{ steps.policy.outputs.include_domains }}
+          max_depth: ${{ steps.policy.outputs.max_depth }}
+          max_urls: ${{ steps.policy.outputs.max_urls }}
+          crawl_enabled: true
+
+      - name: Scan configured dispatch profile
+        if: ${{ inputs.file_issues == true }}
+        id: scan
+        uses: github/accessibility-scanner@v3
+        with:
+          url_configs: ${{ steps.discover.outputs.url_configs }}
+          repository: accesswatch/qs-proposal
+          token: ${{ secrets.GH_TOKEN }}
+          auth_context: ${{ inputs.target == 'glow' && secrets.GLOW_AUTH_CONTEXT || '' }}
+          cache_key: configurable-dispatch-${{ steps.policy.outputs.scan_mode }}-${{ steps.policy.outputs.rule_profile }}.json
+          include_screenshots: true
+          open_grouped_issues: true
+          scans: ${{ steps.policy.outputs.rule_profile == 'axe-only' && '["axe"]' || '["axe","reflow-scan"]' }}
+
+      - name: Dispatch profile summary
+        shell: bash
+        run: |
+          {
+            echo "## Configurable scan (workflow dispatch)"
+            echo ""
+            echo "- Trigger source: \`${{ inputs.run_source }}\`"
+            echo "- Target: \`${{ steps.policy.outputs.target_url }}\`"
+            echo "- Scan mode: \`${{ steps.policy.outputs.scan_mode }}\`"
+            echo "- Rule profile: \`${{ steps.policy.outputs.rule_profile }}\`"
+            echo "- Max URLs: \`${{ steps.policy.outputs.max_urls }}\`"
+            echo "- Max depth: \`${{ steps.policy.outputs.max_depth }}\`"
+            echo "- URL count: \`${{ steps.discover.outputs.url_count }}\`"
+            echo "- Issue filing enabled: \`${{ inputs.file_issues }}\`"
+            echo "- Scan step outcome: \`${{ steps.scan.outcome || 'skipped' }}\`"
+            echo "- Note: Delta mode is intended for lower-noise triage; complete mode remains authoritative for full coverage."
+          } >> "$GITHUB_STEP_SUMMARY"

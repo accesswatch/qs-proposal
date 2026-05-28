@@ -2,6 +2,12 @@ name: Quickstart Full Sitemap Rescan
 
 on:
   workflow_dispatch:
+    inputs:
+      file_issues:
+        description: 'Create GitHub issues from findings (manual only)'
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   prepare:
@@ -35,6 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     steps:
       - name: Checkout
@@ -53,6 +60,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Scan chunk ${{ matrix.chunk_id }}
+        if: ${{ inputs.file_issues == true }}
         uses: github/accessibility-scanner@v3
         with:
           url_configs: ${{ steps.url_configs.outputs.value }}
@@ -76,5 +84,7 @@ jobs:
             echo ""
             echo "- Total URLs (manifest): \`${{ needs.prepare.outputs.total_urls }}\`"
             echo "- Chunk count: \`${{ needs.prepare.outputs.chunk_count }}\`"
+            echo "- Issue filing enabled: \`${{ inputs.file_issues }}\`"
+            echo "- Max parallel chunks: \`1\`"
             echo "- Scan completion: \`${{ needs.scan_chunks.result }}\`"
           } >> "$GITHUB_STEP_SUMMARY"

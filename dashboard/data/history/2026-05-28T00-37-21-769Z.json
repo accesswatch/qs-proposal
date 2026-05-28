@@ -1,0 +1,940 @@
+{
+  "generatedAt": "2026-05-28T00:37:21.704Z",
+  "summary": {
+    "healthScore": 0,
+    "openIssues": 370,
+    "highImpactOpen": 313,
+    "regressionRate": 1.351,
+    "mttrDays": 0
+  },
+  "remediationProgress": {
+    "hasBaseline": true,
+    "previousGeneratedAt": "2026-05-28T00:28:48.180Z",
+    "openDelta": 0,
+    "highImpactDelta": 0,
+    "healthDelta": 0,
+    "summary": "Open issues 0, high-impact 0, health score 0 since previous snapshot."
+  },
+  "qualityControls": {
+    "rawOpenIssues": 500,
+    "ignoredOpenIssues": 0,
+    "actionableOpenIssues": 500,
+    "dedupedOpenIssues": 370,
+    "duplicateEntriesIgnored": 130,
+    "ignoredByReason": [],
+    "ignoredIssuesSample": [],
+    "duplicateSignatureSample": [
+      {
+        "signature": "quickstart.arizona.edu||list||/create-content/events||serious",
+        "site": "quickstart.arizona.edu",
+        "ruleId": "list",
+        "pathPattern": "/create-content/events",
+        "impact": "serious",
+        "duplicateCount": 2
+      },
+      {
+        "signature": "quickstart.arizona.edu||landmark-unique||/create-content/events||serious",
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-unique",
+        "pathPattern": "/create-content/events",
+        "impact": "serious",
+        "duplicateCount": 2
+      },
+      {
+        "signature": "quickstart.arizona.edu||landmark-no-duplicate-contentinfo||/create-content/events||serious",
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "pathPattern": "/create-content/events",
+        "impact": "serious",
+        "duplicateCount": 2
+      },
+      {
+        "signature": "quickstart.arizona.edu||landmark-contentinfo-is-top-level||/create-content/events||serious",
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "pathPattern": "/create-content/events",
+        "impact": "serious",
+        "duplicateCount": 2
+      },
+      {
+        "signature": "quickstart.arizona.edu||list||/create-content/editor-toolbar/using-buttons||serious",
+        "site": "quickstart.arizona.edu",
+        "ruleId": "list",
+        "pathPattern": "/create-content/editor-toolbar/using-buttons",
+        "impact": "serious",
+        "duplicateCount": 2
+      },
+      {
+        "signature": "quickstart.arizona.edu||landmark-unique||/create-content/editor-toolbar/using-buttons||serious",
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-unique",
+        "pathPattern": "/create-content/editor-toolbar/using-buttons",
+        "impact": "serious",
+        "duplicateCount": 2
+      },
+      {
+        "signature": "quickstart.arizona.edu||landmark-no-duplicate-contentinfo||/create-content/editor-toolbar/using-buttons||serious",
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "pathPattern": "/create-content/editor-toolbar/using-buttons",
+        "impact": "serious",
+        "duplicateCount": 2
+      },
+      {
+        "signature": "quickstart.arizona.edu||landmark-contentinfo-is-top-level||/create-content/editor-toolbar/using-buttons||serious",
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "pathPattern": "/create-content/editor-toolbar/using-buttons",
+        "impact": "serious",
+        "duplicateCount": 2
+      },
+      {
+        "signature": "quickstart.arizona.edu||heading-order||/create-content/editor-toolbar/using-buttons||serious",
+        "site": "quickstart.arizona.edu",
+        "ruleId": "heading-order",
+        "pathPattern": "/create-content/editor-toolbar/using-buttons",
+        "impact": "serious",
+        "duplicateCount": 2
+      },
+      {
+        "signature": "quickstart.arizona.edu||color-contrast||/create-content/editor-toolbar/using-buttons||critical",
+        "site": "quickstart.arizona.edu",
+        "ruleId": "color-contrast",
+        "pathPattern": "/create-content/editor-toolbar/using-buttons",
+        "impact": "critical",
+        "duplicateCount": 2
+      }
+    ],
+    "staleActionableIssues": 0
+  },
+  "scanOperations": {
+    "launcher": {
+      "workflowPath": ".github/workflows/configurable-scan.yml",
+      "githubActionsUrl": "https://github.com/accesswatch/qs-proposal/actions/workflows/configurable-scan.yml",
+      "ghCliExamples": [
+        "gh workflow run configurable-scan.yml -R accesswatch/qs-proposal -f target=quickstart -f scan_mode=delta -f rule_profile=focused-rules -f run_source=frontend",
+        "gh workflow run configurable-scan.yml -R accesswatch/qs-proposal -f target=quickstart -f scan_mode=complete -f rule_profile=all-rules -f run_source=admin"
+      ]
+    },
+    "profiles": [
+      {
+        "profileId": "complete-baseline",
+        "label": "Complete Baseline Scan",
+        "triggerType": "Admin schedule or manual",
+        "scanMode": "complete",
+        "ruleProfile": "all-rules",
+        "behavior": "Runs full crawl/rule coverage and refreshes full issue truth.",
+        "suggestedCadence": "Nightly or weekly",
+        "estimatedRuntimeMinutes": 28
+      },
+      {
+        "profileId": "delta-new-issues",
+        "label": "Delta (New Issues Only)",
+        "triggerType": "Frontend launcher or manual",
+        "scanMode": "delta",
+        "ruleProfile": "focused-rules",
+        "behavior": "Prioritizes new signatures and treats known signatures as persistent status, not new alerts.",
+        "suggestedCadence": "On demand and hourly in active remediation windows",
+        "estimatedRuntimeMinutes": 13
+      },
+      {
+        "profileId": "complete-fast",
+        "label": "Complete Fast (Axe Only)",
+        "triggerType": "Admin schedule",
+        "scanMode": "complete",
+        "ruleProfile": "axe-only",
+        "behavior": "Runs complete signature coverage without reflow scan to shorten runtime.",
+        "suggestedCadence": "Daily",
+        "estimatedRuntimeMinutes": 21
+      }
+    ],
+    "combinations": [
+      {
+        "combination": "Frontend: delta + focused rules",
+        "objective": "Fast triage after content/template updates",
+        "estimatedRuntimeMinutes": 13,
+        "expectedSignal": "New issues list + persistent count",
+        "estimatedNoiseReductionPercent": 26
+      },
+      {
+        "combination": "Admin schedule: complete baseline",
+        "objective": "Authoritative risk snapshot",
+        "estimatedRuntimeMinutes": 28,
+        "expectedSignal": "Full risk, trend, and scorecard updates",
+        "estimatedNoiseReductionPercent": 0
+      },
+      {
+        "combination": "Admin schedule: complete fast",
+        "objective": "Daily regression watch with lower runtime",
+        "estimatedRuntimeMinutes": 21,
+        "expectedSignal": "Broad detection with lower scan cost",
+        "estimatedNoiseReductionPercent": 10.4
+      }
+    ],
+    "proof": {
+      "knownSignatureCount": 370,
+      "duplicateEntriesIgnored": 130,
+      "estimatedNoiseReductionPercent": 26,
+      "sampleCandidateRulesForFocusedProfile": [
+        "landmark-contentinfo-is-top-level",
+        "list",
+        "landmark-unique",
+        "landmark-no-duplicate-contentinfo",
+        "heading-order"
+      ]
+    }
+  },
+  "trend90d": [
+    {
+      "period": "W1",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W2",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W3",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W4",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W5",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W6",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W7",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W8",
+      "openIssues": 500,
+      "closedIssues": 0
+    }
+  ],
+  "topViolations": [
+    {
+      "ruleId": "landmark-contentinfo-is-top-level",
+      "count": 72
+    },
+    {
+      "ruleId": "list",
+      "count": 71
+    },
+    {
+      "ruleId": "landmark-unique",
+      "count": 71
+    },
+    {
+      "ruleId": "landmark-no-duplicate-contentinfo",
+      "count": 71
+    },
+    {
+      "ruleId": "heading-order",
+      "count": 25
+    },
+    {
+      "ruleId": "page-has-heading-one",
+      "count": 13
+    },
+    {
+      "ruleId": "region",
+      "count": 10
+    },
+    {
+      "ruleId": "landmark-one-main",
+      "count": 10
+    },
+    {
+      "ruleId": "html-has-lang",
+      "count": 10
+    },
+    {
+      "ruleId": "document-title",
+      "count": 10
+    }
+  ],
+  "siteScorecard": [
+    {
+      "site": "quickstart.arizona.edu",
+      "critical": 2,
+      "serious": 311,
+      "moderate": 57,
+      "minor": 0
+    }
+  ],
+  "executiveBrief": {
+    "primaryDriver": {
+      "ruleId": "landmark-contentinfo-is-top-level",
+      "openFindings": 72,
+      "shareOpenPercent": 19.5
+    },
+    "highestRiskSite": {
+      "site": "quickstart.arizona.edu",
+      "highImpact": 313,
+      "total": 370,
+      "weightedScore": 1685
+    },
+    "topRecurringPattern": {
+      "site": "quickstart.arizona.edu",
+      "ruleId": "landmark-contentinfo-is-top-level",
+      "pathPattern": "/news/211-release-updates-several-small-important-changes",
+      "count": 1,
+      "impact": "serious",
+      "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/500",
+      "sampleIssueTitle": "Accessibility issue: Contentinfo landmark should not be contained in another landmark on /news/211-release-updates-several-small-important-changes"
+    },
+    "focusStatement": "Prioritize landmark-contentinfo-is-top-level on quickstart.arizona.edu; most repeated pattern is /news/211-release-updates-several-small-important-changes (1 open findings)."
+  },
+  "actionCenter": {
+    "prioritizedActions": [
+      {
+        "priority": 75,
+        "actionTitle": "Fix landmark-contentinfo-is-top-level on /news/211-release-updates-several-small-important-changes",
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "pathPattern": "/news/211-release-updates-several-small-important-changes",
+        "impact": "serious",
+        "openFindings": 1,
+        "potentialReduction": 1,
+        "ownerTeam": "Web platform team",
+        "likelyFixArea": "Global page layout template (header/main/footer landmarks)",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/500",
+        "issueDraftUrl": "https://github.com/accesswatch/qs-proposal/issues/new?title=%5BA11y%20Action%5D%20landmark-contentinfo-is-top-level%20at%20%2Fnews%2F211-release-updates-several-small-important-changes%20(1%20open)&body=Suggested%20action%3A%20Fix%20landmark-contentinfo-is-top-level%20on%20%2Fnews%2F211-release-updates-several-small-important-changes%0A%0A-%20Rule%3A%20landmark-contentinfo-is-top-level%0A-%20Path%20pattern%3A%20%2Fnews%2F211-release-updates-several-small-important-changes%0A-%20Open%20findings%20represented%3A%201%0A-%20Suggested%20owner%3A%20Web%20platform%20team%0A-%20Likely%20fix%20area%3A%20Global%20page%20layout%20template%20(header%2Fmain%2Ffooter%20landmarks)%0A-%20Recommendation%3A%20Keep%20one%20footer%20landmark%20at%20top%20level%3B%20remove%20nested%20contentinfo%20wrappers.%0A%0ADefinition%20of%20done%3A%0A1.%20Implement%20template%2Fcomponent%20fix.%0A2.%20Re-scan%20affected%20paths.%0A3.%20Close%20matching%20issues%20when%20verified.",
+        "recommendedFix": "Keep one footer landmark at top level; remove nested contentinfo wrappers."
+      },
+      {
+        "priority": 75,
+        "actionTitle": "Fix list on /create-content/events",
+        "ruleId": "list",
+        "pathPattern": "/create-content/events",
+        "impact": "serious",
+        "openFindings": 1,
+        "potentialReduction": 1,
+        "ownerTeam": "Events content team",
+        "likelyFixArea": "Rich text rendering and list markup templates",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/499",
+        "issueDraftUrl": "https://github.com/accesswatch/qs-proposal/issues/new?title=%5BA11y%20Action%5D%20list%20at%20%2Fcreate-content%2Fevents%20(1%20open)&body=Suggested%20action%3A%20Fix%20list%20on%20%2Fcreate-content%2Fevents%0A%0A-%20Rule%3A%20list%0A-%20Path%20pattern%3A%20%2Fcreate-content%2Fevents%0A-%20Open%20findings%20represented%3A%201%0A-%20Suggested%20owner%3A%20Events%20content%20team%0A-%20Likely%20fix%20area%3A%20Rich%20text%20rendering%20and%20list%20markup%20templates%0A-%20Recommendation%3A%20Refactor%20list%20markup%20so%20ul%2Fol%20contain%20only%20li%20children.%0A%0ADefinition%20of%20done%3A%0A1.%20Implement%20template%2Fcomponent%20fix.%0A2.%20Re-scan%20affected%20paths.%0A3.%20Close%20matching%20issues%20when%20verified.",
+        "recommendedFix": "Refactor list markup so ul/ol contain only li children."
+      },
+      {
+        "priority": 75,
+        "actionTitle": "Fix list on /",
+        "ruleId": "list",
+        "pathPattern": "/",
+        "impact": "serious",
+        "openFindings": 1,
+        "potentialReduction": 1,
+        "ownerTeam": "Core web platform team",
+        "likelyFixArea": "Rich text rendering and list markup templates",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/498",
+        "issueDraftUrl": "https://github.com/accesswatch/qs-proposal/issues/new?title=%5BA11y%20Action%5D%20list%20at%20%2F%20(1%20open)&body=Suggested%20action%3A%20Fix%20list%20on%20%2F%0A%0A-%20Rule%3A%20list%0A-%20Path%20pattern%3A%20%2F%0A-%20Open%20findings%20represented%3A%201%0A-%20Suggested%20owner%3A%20Core%20web%20platform%20team%0A-%20Likely%20fix%20area%3A%20Rich%20text%20rendering%20and%20list%20markup%20templates%0A-%20Recommendation%3A%20Refactor%20list%20markup%20so%20ul%2Fol%20contain%20only%20li%20children.%0A%0ADefinition%20of%20done%3A%0A1.%20Implement%20template%2Fcomponent%20fix.%0A2.%20Re-scan%20affected%20paths.%0A3.%20Close%20matching%20issues%20when%20verified.",
+        "recommendedFix": "Refactor list markup so ul/ol contain only li children."
+      },
+      {
+        "priority": 75,
+        "actionTitle": "Fix landmark-unique on /create-content/events",
+        "ruleId": "landmark-unique",
+        "pathPattern": "/create-content/events",
+        "impact": "serious",
+        "openFindings": 1,
+        "potentialReduction": 1,
+        "ownerTeam": "Events content team",
+        "likelyFixArea": "Global page layout template (header/main/footer landmarks)",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/497",
+        "issueDraftUrl": "https://github.com/accesswatch/qs-proposal/issues/new?title=%5BA11y%20Action%5D%20landmark-unique%20at%20%2Fcreate-content%2Fevents%20(1%20open)&body=Suggested%20action%3A%20Fix%20landmark-unique%20on%20%2Fcreate-content%2Fevents%0A%0A-%20Rule%3A%20landmark-unique%0A-%20Path%20pattern%3A%20%2Fcreate-content%2Fevents%0A-%20Open%20findings%20represented%3A%201%0A-%20Suggested%20owner%3A%20Events%20content%20team%0A-%20Likely%20fix%20area%3A%20Global%20page%20layout%20template%20(header%2Fmain%2Ffooter%20landmarks)%0A-%20Recommendation%3A%20Add%20unique%20aria-label%2Faria-labelledby%20to%20repeated%20landmarks.%0A%0ADefinition%20of%20done%3A%0A1.%20Implement%20template%2Fcomponent%20fix.%0A2.%20Re-scan%20affected%20paths.%0A3.%20Close%20matching%20issues%20when%20verified.",
+        "recommendedFix": "Add unique aria-label/aria-labelledby to repeated landmarks."
+      },
+      {
+        "priority": 75,
+        "actionTitle": "Fix landmark-unique on /",
+        "ruleId": "landmark-unique",
+        "pathPattern": "/",
+        "impact": "serious",
+        "openFindings": 1,
+        "potentialReduction": 1,
+        "ownerTeam": "Core web platform team",
+        "likelyFixArea": "Global page layout template (header/main/footer landmarks)",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/496",
+        "issueDraftUrl": "https://github.com/accesswatch/qs-proposal/issues/new?title=%5BA11y%20Action%5D%20landmark-unique%20at%20%2F%20(1%20open)&body=Suggested%20action%3A%20Fix%20landmark-unique%20on%20%2F%0A%0A-%20Rule%3A%20landmark-unique%0A-%20Path%20pattern%3A%20%2F%0A-%20Open%20findings%20represented%3A%201%0A-%20Suggested%20owner%3A%20Core%20web%20platform%20team%0A-%20Likely%20fix%20area%3A%20Global%20page%20layout%20template%20(header%2Fmain%2Ffooter%20landmarks)%0A-%20Recommendation%3A%20Add%20unique%20aria-label%2Faria-labelledby%20to%20repeated%20landmarks.%0A%0ADefinition%20of%20done%3A%0A1.%20Implement%20template%2Fcomponent%20fix.%0A2.%20Re-scan%20affected%20paths.%0A3.%20Close%20matching%20issues%20when%20verified.",
+        "recommendedFix": "Add unique aria-label/aria-labelledby to repeated landmarks."
+      },
+      {
+        "priority": 75,
+        "actionTitle": "Fix landmark-no-duplicate-contentinfo on /create-content/events",
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "pathPattern": "/create-content/events",
+        "impact": "serious",
+        "openFindings": 1,
+        "potentialReduction": 1,
+        "ownerTeam": "Events content team",
+        "likelyFixArea": "Global page layout template (header/main/footer landmarks)",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/495",
+        "issueDraftUrl": "https://github.com/accesswatch/qs-proposal/issues/new?title=%5BA11y%20Action%5D%20landmark-no-duplicate-contentinfo%20at%20%2Fcreate-content%2Fevents%20(1%20open)&body=Suggested%20action%3A%20Fix%20landmark-no-duplicate-contentinfo%20on%20%2Fcreate-content%2Fevents%0A%0A-%20Rule%3A%20landmark-no-duplicate-contentinfo%0A-%20Path%20pattern%3A%20%2Fcreate-content%2Fevents%0A-%20Open%20findings%20represented%3A%201%0A-%20Suggested%20owner%3A%20Events%20content%20team%0A-%20Likely%20fix%20area%3A%20Global%20page%20layout%20template%20(header%2Fmain%2Ffooter%20landmarks)%0A-%20Recommendation%3A%20Ensure%20only%20one%20contentinfo%2Ffooter%20landmark%20per%20page.%0A%0ADefinition%20of%20done%3A%0A1.%20Implement%20template%2Fcomponent%20fix.%0A2.%20Re-scan%20affected%20paths.%0A3.%20Close%20matching%20issues%20when%20verified.",
+        "recommendedFix": "Ensure only one contentinfo/footer landmark per page."
+      },
+      {
+        "priority": 75,
+        "actionTitle": "Fix landmark-no-duplicate-contentinfo on /",
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "pathPattern": "/",
+        "impact": "serious",
+        "openFindings": 1,
+        "potentialReduction": 1,
+        "ownerTeam": "Core web platform team",
+        "likelyFixArea": "Global page layout template (header/main/footer landmarks)",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/494",
+        "issueDraftUrl": "https://github.com/accesswatch/qs-proposal/issues/new?title=%5BA11y%20Action%5D%20landmark-no-duplicate-contentinfo%20at%20%2F%20(1%20open)&body=Suggested%20action%3A%20Fix%20landmark-no-duplicate-contentinfo%20on%20%2F%0A%0A-%20Rule%3A%20landmark-no-duplicate-contentinfo%0A-%20Path%20pattern%3A%20%2F%0A-%20Open%20findings%20represented%3A%201%0A-%20Suggested%20owner%3A%20Core%20web%20platform%20team%0A-%20Likely%20fix%20area%3A%20Global%20page%20layout%20template%20(header%2Fmain%2Ffooter%20landmarks)%0A-%20Recommendation%3A%20Ensure%20only%20one%20contentinfo%2Ffooter%20landmark%20per%20page.%0A%0ADefinition%20of%20done%3A%0A1.%20Implement%20template%2Fcomponent%20fix.%0A2.%20Re-scan%20affected%20paths.%0A3.%20Close%20matching%20issues%20when%20verified.",
+        "recommendedFix": "Ensure only one contentinfo/footer landmark per page."
+      },
+      {
+        "priority": 75,
+        "actionTitle": "Fix landmark-contentinfo-is-top-level on /create-content/events",
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "pathPattern": "/create-content/events",
+        "impact": "serious",
+        "openFindings": 1,
+        "potentialReduction": 1,
+        "ownerTeam": "Events content team",
+        "likelyFixArea": "Global page layout template (header/main/footer landmarks)",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/493",
+        "issueDraftUrl": "https://github.com/accesswatch/qs-proposal/issues/new?title=%5BA11y%20Action%5D%20landmark-contentinfo-is-top-level%20at%20%2Fcreate-content%2Fevents%20(1%20open)&body=Suggested%20action%3A%20Fix%20landmark-contentinfo-is-top-level%20on%20%2Fcreate-content%2Fevents%0A%0A-%20Rule%3A%20landmark-contentinfo-is-top-level%0A-%20Path%20pattern%3A%20%2Fcreate-content%2Fevents%0A-%20Open%20findings%20represented%3A%201%0A-%20Suggested%20owner%3A%20Events%20content%20team%0A-%20Likely%20fix%20area%3A%20Global%20page%20layout%20template%20(header%2Fmain%2Ffooter%20landmarks)%0A-%20Recommendation%3A%20Keep%20one%20footer%20landmark%20at%20top%20level%3B%20remove%20nested%20contentinfo%20wrappers.%0A%0ADefinition%20of%20done%3A%0A1.%20Implement%20template%2Fcomponent%20fix.%0A2.%20Re-scan%20affected%20paths.%0A3.%20Close%20matching%20issues%20when%20verified.",
+        "recommendedFix": "Keep one footer landmark at top level; remove nested contentinfo wrappers."
+      }
+    ],
+    "hotspotOwners": [
+      {
+        "ownerTeam": "Core web platform team",
+        "representedFindings": 5,
+        "affectedPatterns": 5
+      },
+      {
+        "ownerTeam": "Events content team",
+        "representedFindings": 4,
+        "affectedPatterns": 4
+      },
+      {
+        "ownerTeam": "Web platform team",
+        "representedFindings": 3,
+        "affectedPatterns": 3
+      },
+      {
+        "ownerTeam": "Content editing UX team",
+        "representedFindings": 3,
+        "affectedPatterns": 3
+      }
+    ],
+    "fixPlaybooks": [
+      {
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "totalOpen": 72,
+        "recommendedFix": "Keep one footer landmark at top level; remove nested contentinfo wrappers.",
+        "docsHint": "Focus on templates/components producing landmark-contentinfo-is-top-level."
+      },
+      {
+        "ruleId": "list",
+        "totalOpen": 71,
+        "recommendedFix": "Refactor list markup so ul/ol contain only li children.",
+        "docsHint": "Focus on templates/components producing list."
+      },
+      {
+        "ruleId": "landmark-unique",
+        "totalOpen": 71,
+        "recommendedFix": "Add unique aria-label/aria-labelledby to repeated landmarks.",
+        "docsHint": "Focus on templates/components producing landmark-unique."
+      },
+      {
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "totalOpen": 71,
+        "recommendedFix": "Ensure only one contentinfo/footer landmark per page.",
+        "docsHint": "Focus on templates/components producing landmark-no-duplicate-contentinfo."
+      },
+      {
+        "ruleId": "heading-order",
+        "totalOpen": 25,
+        "recommendedFix": "Normalize heading hierarchy to increment one level at a time.",
+        "docsHint": "Focus on templates/components producing heading-order."
+      },
+      {
+        "ruleId": "page-has-heading-one",
+        "totalOpen": 13,
+        "recommendedFix": "Guarantee a single descriptive H1 for each page template.",
+        "docsHint": "Focus on templates/components producing page-has-heading-one."
+      }
+    ],
+    "magicOpportunities": [
+      "Target top 3 actions to potentially remove 3 open findings.",
+      "Run a template-level fix sprint on quickstart.arizona.edu; it currently carries the highest weighted risk.",
+      "Assign first remediation wave to Core web platform team based on hotspot concentration."
+    ]
+  },
+  "drilldowns": {
+    "recurringIssuePatterns": [
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "pathPattern": "/news/211-release-updates-several-small-important-changes",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/500",
+        "sampleIssueTitle": "Accessibility issue: Contentinfo landmark should not be contained in another landmark on /news/211-release-updates-several-small-important-changes"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "list",
+        "pathPattern": "/create-content/events",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/499",
+        "sampleIssueTitle": "Accessibility issue: <ul> and <ol> must only directly contain <li>, <script> or <template> elements on /create-content/events"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "list",
+        "pathPattern": "/",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/498",
+        "sampleIssueTitle": "Accessibility issue: <ul> and <ol> must only directly contain <li>, <script> or <template> elements on /"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-unique",
+        "pathPattern": "/create-content/events",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/497",
+        "sampleIssueTitle": "Accessibility issue: Landmarks should have a unique role or role/label/title (i.e. accessible name) combination on /create-content/events"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-unique",
+        "pathPattern": "/",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/496",
+        "sampleIssueTitle": "Accessibility issue: Landmarks should have a unique role or role/label/title (i.e. accessible name) combination on /"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "pathPattern": "/create-content/events",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/495",
+        "sampleIssueTitle": "Accessibility issue: Document should not have more than one contentinfo landmark on /create-content/events"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "pathPattern": "/",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/494",
+        "sampleIssueTitle": "Accessibility issue: Document should not have more than one contentinfo landmark on /"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "pathPattern": "/create-content/events",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/493",
+        "sampleIssueTitle": "Accessibility issue: Contentinfo landmark should not be contained in another landmark on /create-content/events"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "pathPattern": "/",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/492",
+        "sampleIssueTitle": "Accessibility issue: Contentinfo landmark should not be contained in another landmark on /"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "list",
+        "pathPattern": "/create-content/editor-toolbar/using-buttons",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/491",
+        "sampleIssueTitle": "Accessibility issue: <ul> and <ol> must only directly contain <li>, <script> or <template> elements on /create-content/editor-toolbar/using-buttons"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "heading-order",
+        "pathPattern": "/",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/490",
+        "sampleIssueTitle": "Accessibility issue: Heading levels should only increase by one on /"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-unique",
+        "pathPattern": "/create-content/editor-toolbar/using-buttons",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/489",
+        "sampleIssueTitle": "Accessibility issue: Landmarks should have a unique role or role/label/title (i.e. accessible name) combination on /create-content/editor-toolbar/using-buttons"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "list",
+        "pathPattern": "/get-started/logging",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/488",
+        "sampleIssueTitle": "Accessibility issue: <ul> and <ol> must only directly contain <li>, <script> or <template> elements on /get-started/logging"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "pathPattern": "/create-content/editor-toolbar/using-buttons",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/487",
+        "sampleIssueTitle": "Accessibility issue: Document should not have more than one contentinfo landmark on /create-content/editor-toolbar/using-buttons"
+      },
+      {
+        "site": "quickstart.arizona.edu",
+        "ruleId": "landmark-unique",
+        "pathPattern": "/get-started/logging",
+        "count": 1,
+        "impact": "serious",
+        "sampleIssueUrl": "https://github.com/accesswatch/qs-proposal/issues/486",
+        "sampleIssueTitle": "Accessibility issue: Landmarks should have a unique role or role/label/title (i.e. accessible name) combination on /get-started/logging"
+      }
+    ],
+    "ruleImpact": [
+      {
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "critical": 0,
+        "serious": 72,
+        "moderate": 0,
+        "minor": 0,
+        "total": 72
+      },
+      {
+        "ruleId": "list",
+        "critical": 0,
+        "serious": 71,
+        "moderate": 0,
+        "minor": 0,
+        "total": 71
+      },
+      {
+        "ruleId": "landmark-unique",
+        "critical": 0,
+        "serious": 71,
+        "moderate": 0,
+        "minor": 0,
+        "total": 71
+      },
+      {
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "critical": 0,
+        "serious": 71,
+        "moderate": 0,
+        "minor": 0,
+        "total": 71
+      },
+      {
+        "ruleId": "heading-order",
+        "critical": 0,
+        "serious": 25,
+        "moderate": 0,
+        "minor": 0,
+        "total": 25
+      },
+      {
+        "ruleId": "page-has-heading-one",
+        "critical": 0,
+        "serious": 0,
+        "moderate": 13,
+        "minor": 0,
+        "total": 13
+      },
+      {
+        "ruleId": "region",
+        "critical": 0,
+        "serious": 0,
+        "moderate": 10,
+        "minor": 0,
+        "total": 10
+      },
+      {
+        "ruleId": "landmark-one-main",
+        "critical": 0,
+        "serious": 0,
+        "moderate": 10,
+        "minor": 0,
+        "total": 10
+      },
+      {
+        "ruleId": "html-has-lang",
+        "critical": 0,
+        "serious": 0,
+        "moderate": 10,
+        "minor": 0,
+        "total": 10
+      },
+      {
+        "ruleId": "document-title",
+        "critical": 0,
+        "serious": 0,
+        "moderate": 10,
+        "minor": 0,
+        "total": 10
+      }
+    ],
+    "siteRisk": [
+      {
+        "site": "quickstart.arizona.edu",
+        "highImpact": 313,
+        "total": 370,
+        "weightedScore": 1685
+      }
+    ],
+    "recentOpenIssues": [
+      {
+        "title": "Accessibility issue: Contentinfo landmark should not be contained in another landmark on /news/211-release-updates-several-small-important-changes",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/500",
+        "createdAt": "2026-05-27T23:52:13Z",
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/news/211-release-updates-several-small-important-changes"
+      },
+      {
+        "title": "Accessibility issue: <ul> and <ol> must only directly contain <li>, <script> or <template> elements on /create-content/events",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/499",
+        "createdAt": "2026-05-27T23:52:11Z",
+        "ruleId": "list",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/create-content/events"
+      },
+      {
+        "title": "Accessibility issue: <ul> and <ol> must only directly contain <li>, <script> or <template> elements on /",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/498",
+        "createdAt": "2026-05-27T23:52:10Z",
+        "ruleId": "list",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/"
+      },
+      {
+        "title": "Accessibility issue: Landmarks should have a unique role or role/label/title (i.e. accessible name) combination on /create-content/events",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/497",
+        "createdAt": "2026-05-27T23:52:08Z",
+        "ruleId": "landmark-unique",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/create-content/events"
+      },
+      {
+        "title": "Accessibility issue: Landmarks should have a unique role or role/label/title (i.e. accessible name) combination on /",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/496",
+        "createdAt": "2026-05-27T23:52:07Z",
+        "ruleId": "landmark-unique",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/"
+      },
+      {
+        "title": "Accessibility issue: Document should not have more than one contentinfo landmark on /create-content/events",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/495",
+        "createdAt": "2026-05-27T23:52:05Z",
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/create-content/events"
+      },
+      {
+        "title": "Accessibility issue: Document should not have more than one contentinfo landmark on /",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/494",
+        "createdAt": "2026-05-27T23:52:04Z",
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/"
+      },
+      {
+        "title": "Accessibility issue: Contentinfo landmark should not be contained in another landmark on /create-content/events",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/493",
+        "createdAt": "2026-05-27T23:52:02Z",
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/create-content/events"
+      },
+      {
+        "title": "Accessibility issue: Contentinfo landmark should not be contained in another landmark on /",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/492",
+        "createdAt": "2026-05-27T23:52:01Z",
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/"
+      },
+      {
+        "title": "Accessibility issue: <ul> and <ol> must only directly contain <li>, <script> or <template> elements on /create-content/editor-toolbar/using-buttons",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/491",
+        "createdAt": "2026-05-27T23:51:59Z",
+        "ruleId": "list",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/create-content/editor-toolbar/using-buttons"
+      },
+      {
+        "title": "Accessibility issue: Heading levels should only increase by one on /",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/490",
+        "createdAt": "2026-05-27T23:51:58Z",
+        "ruleId": "heading-order",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/"
+      },
+      {
+        "title": "Accessibility issue: Landmarks should have a unique role or role/label/title (i.e. accessible name) combination on /create-content/editor-toolbar/using-buttons",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/489",
+        "createdAt": "2026-05-27T23:51:56Z",
+        "ruleId": "landmark-unique",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/create-content/editor-toolbar/using-buttons"
+      },
+      {
+        "title": "Accessibility issue: <ul> and <ol> must only directly contain <li>, <script> or <template> elements on /get-started/logging",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/488",
+        "createdAt": "2026-05-27T23:51:55Z",
+        "ruleId": "list",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/get-started/logging"
+      },
+      {
+        "title": "Accessibility issue: Document should not have more than one contentinfo landmark on /create-content/editor-toolbar/using-buttons",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/487",
+        "createdAt": "2026-05-27T23:51:53Z",
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/create-content/editor-toolbar/using-buttons"
+      },
+      {
+        "title": "Accessibility issue: Landmarks should have a unique role or role/label/title (i.e. accessible name) combination on /get-started/logging",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/486",
+        "createdAt": "2026-05-27T23:51:52Z",
+        "ruleId": "landmark-unique",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/get-started/logging"
+      },
+      {
+        "title": "Accessibility issue: Contentinfo landmark should not be contained in another landmark on /create-content/editor-toolbar/using-buttons",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/485",
+        "createdAt": "2026-05-27T23:51:50Z",
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/create-content/editor-toolbar/using-buttons"
+      },
+      {
+        "title": "Accessibility issue: Document should not have more than one contentinfo landmark on /get-started/logging",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/484",
+        "createdAt": "2026-05-27T23:51:49Z",
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/get-started/logging"
+      },
+      {
+        "title": "Accessibility issue: Heading levels should only increase by one on /create-content/editor-toolbar/using-buttons",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/483",
+        "createdAt": "2026-05-27T23:51:47Z",
+        "ruleId": "heading-order",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/create-content/editor-toolbar/using-buttons"
+      },
+      {
+        "title": "Accessibility issue: Contentinfo landmark should not be contained in another landmark on /get-started/logging",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/482",
+        "createdAt": "2026-05-27T23:51:46Z",
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/get-started/logging"
+      },
+      {
+        "title": "Accessibility issue: Elements must meet minimum color contrast ratio thresholds on /create-content/editor-toolbar/using-buttons",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/481",
+        "createdAt": "2026-05-27T23:51:44Z",
+        "ruleId": "color-contrast",
+        "impact": "critical",
+        "site": "quickstart.arizona.edu",
+        "path": "/create-content/editor-toolbar/using-buttons"
+      },
+      {
+        "title": "Accessibility issue: <ul> and <ol> must only directly contain <li>, <script> or <template> elements on /events/information-session-introduction-website-offerings-campus-web-services",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/480",
+        "createdAt": "2026-05-27T23:51:43Z",
+        "ruleId": "list",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/events/information-session-introduction-website-offerings-campus-web-services"
+      },
+      {
+        "title": "Accessibility issue: <ul> and <ol> must only directly contain <li>, <script> or <template> elements on /create-content/editor-toolbar/tables",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/479",
+        "createdAt": "2026-05-27T23:51:41Z",
+        "ruleId": "list",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/create-content/editor-toolbar/tables"
+      },
+      {
+        "title": "Accessibility issue: Landmarks should have a unique role or role/label/title (i.e. accessible name) combination on /events/information-session-introduction-website-offerings-campus-web-services",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/478",
+        "createdAt": "2026-05-27T23:51:40Z",
+        "ruleId": "landmark-unique",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/events/information-session-introduction-website-offerings-campus-web-services"
+      },
+      {
+        "title": "Accessibility issue: Landmarks should have a unique role or role/label/title (i.e. accessible name) combination on /create-content/editor-toolbar/tables",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/477",
+        "createdAt": "2026-05-27T23:51:38Z",
+        "ruleId": "landmark-unique",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/create-content/editor-toolbar/tables"
+      },
+      {
+        "title": "Accessibility issue: Document should not have more than one contentinfo landmark on /events/information-session-introduction-website-offerings-campus-web-services",
+        "url": "https://github.com/accesswatch/qs-proposal/issues/476",
+        "createdAt": "2026-05-27T23:51:37Z",
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "impact": "serious",
+        "site": "quickstart.arizona.edu",
+        "path": "/events/information-session-introduction-website-offerings-campus-web-services"
+      }
+    ]
+  }
+}

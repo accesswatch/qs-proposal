@@ -2,8 +2,12 @@ name: Pilot Accessibility Scan (Quickstart + GLOW)
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 13 * * 1'
+    inputs:
+      file_issues:
+        description: 'Create GitHub issues from findings (manual only)'
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   quickstart_scan:
@@ -32,6 +36,8 @@ jobs:
           crawl_enabled: true
 
       - name: Scan Quickstart discovered URLs
+        if: ${{ inputs.file_issues == true }}
+        id: scan_quickstart
         uses: github/accessibility-scanner@v3
         with:
           url_configs: ${{ steps.discover_quickstart.outputs.url_configs }}
@@ -41,6 +47,18 @@ jobs:
           include_screenshots: true
           open_grouped_issues: true
           scans: '["axe","reflow-scan"]'
+
+      - name: Quickstart summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### Quickstart Discovery + Scan"
+            echo ""
+            echo "- URL count: \`${{ steps.discover_quickstart.outputs.url_count }}\`"
+            echo "- Issue filing enabled: \`${{ inputs.file_issues }}\`"
+            echo "- Scan step outcome: \`${{ steps.scan_quickstart.outcome || 'skipped' }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   glow_scan:
     name: GLOW Discovery + Scan
@@ -68,6 +86,8 @@ jobs:
           crawl_enabled: true
 
       - name: Scan GLOW discovered URLs
+        if: ${{ inputs.file_issues == true }}
+        id: scan_glow
         uses: github/accessibility-scanner@v3
         with:
           url_configs: ${{ steps.discover_glow.outputs.url_configs }}
@@ -78,3 +98,15 @@ jobs:
           include_screenshots: true
           open_grouped_issues: true
           scans: '["axe","reflow-scan"]'
+
+      - name: GLOW summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### GLOW Discovery + Scan"
+            echo ""
+            echo "- URL count: \`${{ steps.discover_glow.outputs.url_count }}\`"
+            echo "- Issue filing enabled: \`${{ inputs.file_issues }}\`"
+            echo "- Scan step outcome: \`${{ steps.scan_glow.outcome || 'skipped' }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

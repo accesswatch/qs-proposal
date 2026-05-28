@@ -31,6 +31,22 @@
     .badge-completed { background: #dafbe1; color: #1a7f37; }
     .badge-failed { background: #ffebe9; color: #cf222e; }
     .badge-queued { background: #ddf4ff; color: #0550ae; }
+    .insight { margin: 0 0 8px; }
+    .small { font-size: 12px; color: #57606a; }
+    .help-button { border: 1px solid #0969da; background: #fff; color: #0969da; border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; }
+    .help-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .help-panel h3 { margin-top: 0; margin-bottom: 8px; }
+    .help-panel p { margin: 0 0 8px; }
+    .scenario-list { margin: 0; padding-left: 18px; }
+    .action-grid { display: grid; gap: 12px; grid-template-columns: 2fr 1fr; }
+    @media (max-width: 900px) { .action-grid { grid-template-columns: 1fr; } }
+    .pill { display: inline-block; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 600; background: #ddf4ff; color: #0550ae; }
+    dialog.guidance-modal { border: 1px solid #d0d7de; border-radius: 10px; width: min(760px, 92vw); padding: 0; }
+    dialog.guidance-modal::backdrop { background: rgba(0, 0, 0, 0.45); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #d8dee4; background: #f6f8fa; }
+    .modal-header h3 { margin: 0; font-size: 17px; }
+    .modal-body { padding: 14px; }
+    .modal-close { border: 1px solid #d0d7de; background: #fff; border-radius: 6px; padding: 4px 8px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -44,6 +60,34 @@
     <section aria-labelledby="summary-heading">
       <h2 id="summary-heading">Executive Summary</h2>
       <div class="grid" id="summary"></div>
+      <div class="card" id="executive-brief"></div>
+    </section>
+
+    <section aria-labelledby="remediation-tracking-heading">
+      <h2 id="remediation-tracking-heading">Remediation Tracking</h2>
+      <div class="grid" id="remediation-cards"></div>
+      <p class="note" id="remediation-summary">No remediation baseline yet.</p>
+    </section>
+
+    <section aria-labelledby="validation-wins-heading">
+      <h2 id="validation-wins-heading">Validation Wins</h2>
+      <div class="grid" id="validation-cards"></div>
+      <table>
+        <caption>Rules currently clean (closed and not currently failing)</caption>
+        <thead><tr><th scope="col">Rule</th><th scope="col">Closed Findings</th></tr></thead>
+        <tbody id="resolved-rules"></tbody>
+      </table>
+    </section>
+
+    <section aria-labelledby="guardrails-heading">
+      <h2 id="guardrails-heading">Dedup & Ignore Guardrails</h2>
+      <div class="grid" id="guardrail-cards"></div>
+      <table>
+        <caption>Ignored issue reasons</caption>
+        <thead><tr><th scope="col">Reason label</th><th scope="col">Count</th></tr></thead>
+        <tbody id="ignored-reasons"></tbody>
+      </table>
+      <p class="note" id="guardrails-proof"></p>
     </section>
 
     <section aria-labelledby="scan-status-heading">
@@ -62,7 +106,7 @@
       <h2 id="violations-heading">Top Violations</h2>
       <table>
         <caption>Most frequent accessibility rule violations</caption>
-        <thead><tr><th scope="col">Rule ID</th><th scope="col">Open Findings</th></tr></thead>
+        <thead><tr><th scope="col">Rule ID</th><th scope="col">Open Findings</th><th scope="col">Guidance</th></tr></thead>
         <tbody id="violations"></tbody>
       </table>
     </section>
@@ -80,11 +124,190 @@
       </table>
     </section>
 
+    <section aria-labelledby="patterns-heading">
+      <h2 id="patterns-heading">Repeated Issue Patterns</h2>
+      <table>
+        <caption>Same issue clusters by rule + path pattern</caption>
+        <thead>
+          <tr><th scope="col">Rule</th><th scope="col">Path Pattern</th><th scope="col">Open</th><th scope="col">Sample</th></tr>
+        </thead>
+        <tbody id="patterns"></tbody>
+      </table>
+    </section>
+
+    <section aria-labelledby="rule-impact-heading">
+      <h2 id="rule-impact-heading">Rule Impact Drill-down</h2>
+      <table>
+        <caption>Top rules split by severity</caption>
+        <thead>
+          <tr>
+            <th scope="col">Rule</th><th scope="col">Critical</th><th scope="col">Serious</th><th scope="col">Moderate</th><th scope="col">Minor</th><th scope="col">Total</th><th scope="col">Guidance</th>
+          </tr>
+        </thead>
+        <tbody id="rule-impact"></tbody>
+      </table>
+    </section>
+
+    <section aria-labelledby="action-center-heading">
+      <h2 id="action-center-heading">Action Center</h2>
+      <div class="action-grid">
+        <div class="card">
+          <h3 style="margin-top:0;">Prioritized Actions</h3>
+          <table>
+            <caption>Highest-leverage actions to reduce open findings</caption>
+            <thead>
+              <tr>
+                <th scope="col">Priority</th><th scope="col">Action</th><th scope="col">Owner</th><th scope="col">Likely Fix Area</th><th scope="col">Occurrences / Paths</th><th scope="col">Links</th>
+              </tr>
+            </thead>
+            <tbody id="action-items"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0;">Magic Opportunities</h3>
+          <ul id="magic-opportunities" class="scenario-list"></ul>
+          <h3>Owner Hotspots</h3>
+          <table>
+            <thead><tr><th scope="col">Owner Team</th><th scope="col">Findings</th><th scope="col">Patterns</th></tr></thead>
+            <tbody id="owner-hotspots"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="scan-operations-heading">
+      <h2 id="scan-operations-heading">Scan Operations Launcher</h2>
+      <div class="action-grid">
+        <div class="card">
+          <h3 style="margin-top:0;">Profiles</h3>
+          <table>
+            <thead><tr><th scope="col">Profile</th><th scope="col">Mode</th><th scope="col">Trigger</th><th scope="col">Est. Runtime</th></tr></thead>
+            <tbody id="scan-profiles"></tbody>
+          </table>
+          <p class="note" id="workflow-launch-link"></p>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0;">Combination simulation</h3>
+          <table>
+            <thead><tr><th scope="col">Combination</th><th scope="col">Signal</th><th scope="col">Runtime</th><th scope="col">Noise reduction</th></tr></thead>
+            <tbody id="scan-combinations"></tbody>
+          </table>
+          <p class="small"><strong>CLI dispatch examples</strong></p>
+          <ul id="scan-cli-examples" class="scenario-list"></ul>
+        </div>
+      </div>
+      <p class="note" id="scan-proof"></p>
+    </section>
+
+    <section aria-labelledby="static-report-heading">
+      <h2 id="static-report-heading">Static Report (Email-ready)</h2>
+      <p class="note">Use this for sharing live metrics without running the dashboard client script.</p>
+      <p><a href="./static/latest-report.html" target="_blank" rel="noopener noreferrer">Open latest static report</a></p>
+    </section>
+
     <p class="note">Data source: <code>dashboard/data/latest.json</code> (generated by dashboard refresh workflow).</p>
   </main>
+  <dialog id="guidance-modal" class="guidance-modal" aria-labelledby="guidance-title">
+    <div class="modal-header">
+      <h3 id="guidance-title">Rule guidance</h3>
+      <button type="button" class="modal-close" data-close-guidance aria-label="Close guidance dialog">Close</button>
+    </div>
+    <div class="modal-body" id="guidance-body"></div>
+  </dialog>
 
   <script>
     const RUNS_API = 'https://api.github.com/repos/accesswatch/qs-proposal/actions/runs?per_page=10';
+    const AXE_RULES_BASE = 'https://dequeuniversity.com/rules/axe/4.10/';
+    const RULE_HELP = {
+      'landmark-contentinfo-is-top-level': {
+        plainLanguage: 'Footer landmark must not be nested inside another landmark region.',
+        whyItMatters: 'Screen reader users rely on consistent landmark structure for quick navigation.',
+        scenarios: ['Page templates with nested footer wrappers.', 'Reusable components that inject extra landmark roles.']
+      },
+      'landmark-no-duplicate-contentinfo': {
+        plainLanguage: 'Each page should expose only one contentinfo landmark.',
+        whyItMatters: 'Duplicate footer landmarks create noisy landmark navigation.',
+        scenarios: ['Two footer containers rendered in layout + content block.', 'Sticky helper/footer widget duplicating footer semantics.']
+      },
+      'landmark-unique': {
+        plainLanguage: 'Landmarks of the same type need unique labels or names.',
+        whyItMatters: 'Users cannot distinguish repeated regions without unique names.',
+        scenarios: ['Multiple nav regions all announced as “navigation”.', 'Sidebar and header both missing aria-label values.']
+      },
+      'list': {
+        plainLanguage: 'Lists can only contain list items directly.',
+        whyItMatters: 'Invalid list structure causes confusing announcements and skipped content.',
+        scenarios: ['Div wrappers directly inside ul/ol.', 'CMS WYSIWYG injecting paragraph tags between li items.']
+      },
+      'heading-order': {
+        plainLanguage: 'Heading levels should not skip levels.',
+        whyItMatters: 'Heading structure is a page outline for non-visual users.',
+        scenarios: ['Jumping from H1 directly to H3 for styling.', 'Widget titles hardcoded to H4 regardless of context.']
+      },
+      'page-has-heading-one': {
+        plainLanguage: 'Every page should have one clear level-one heading.',
+        whyItMatters: 'Users need a clear page title landmark when entering content.',
+        scenarios: ['Template omits H1 on landing pages.', 'Multiple visual titles not marked semantically.']
+      },
+      'region': {
+        plainLanguage: 'Important content should be inside landmarks.',
+        whyItMatters: 'Landmarks help users jump to main sections quickly.',
+        scenarios: ['Standalone content blocks outside main/aside/nav landmarks.', 'Custom widgets not wrapped in semantic regions.']
+      },
+      'landmark-one-main': {
+        plainLanguage: 'Page should include one main landmark for core content.',
+        whyItMatters: 'Main landmark provides the primary content jump target.',
+        scenarios: ['Main content rendered in generic div.', 'Multiple main landmarks on complex templates.']
+      },
+      'html-has-lang': {
+        plainLanguage: 'The html element needs a language value.',
+        whyItMatters: 'Screen readers use language to pronounce words correctly.',
+        scenarios: ['Base template missing lang attribute.', 'SSR/head pipeline stripping html attributes.']
+      },
+      'document-title': {
+        plainLanguage: 'Page needs a descriptive title element.',
+        whyItMatters: 'Title is read first by assistive technology and browser tabs.',
+        scenarios: ['Title left empty by route template.', 'Duplicate generic titles across many pages.']
+      }
+    };
+    const escapeHtml = (value) => String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+    const docsUrlForRule = (ruleId) => `${AXE_RULES_BASE}${encodeURIComponent(ruleId)}`;
+
+    function renderRuleHelp(ruleId, scenarioPath = '') {
+      const modal = document.getElementById('guidance-modal');
+      const titleEl = document.getElementById('guidance-title');
+      const bodyEl = document.getElementById('guidance-body');
+      const help = RULE_HELP[ruleId] || {
+        plainLanguage: 'No custom summary yet for this rule.',
+        whyItMatters: 'Review the linked rule documentation for impact and remediation.',
+        scenarios: ['Inspect affected templates/components tied to this rule.', 'Add a focused fix and re-run the scan for this path pattern.']
+      };
+      const scenarioLabel = scenarioPath ? `Path pattern in focus: ${scenarioPath}` : 'Select any guide button in a table to focus a scenario.';
+      titleEl.textContent = ruleId || 'Rule guidance';
+      bodyEl.innerHTML = `
+        <div class="help-grid">
+          <div>
+            <p><strong>Plain-language summary:</strong> ${escapeHtml(help.plainLanguage)}</p>
+            <p><strong>Why this matters:</strong> ${escapeHtml(help.whyItMatters)}</p>
+            <p><a href="${docsUrlForRule(ruleId || 'rules')}" target="_blank" rel="noopener noreferrer">Open official rule guidance</a></p>
+          </div>
+          <div>
+            <p><strong>Drill-in scenario:</strong> ${escapeHtml(scenarioLabel)}</p>
+            <ul class="scenario-list">
+              ${help.scenarios.map(item => `<li>${escapeHtml(item)}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      `;
+      if (typeof modal.showModal === 'function') {
+        modal.showModal();
+      }
+    }
 
     function formatRunStatus(run) {
       if (run.status === 'queued') return {label: 'Queued', cls: 'badge-queued'};
@@ -133,9 +356,27 @@
         data = await latest.json();
       } catch (error) {
         document.getElementById('summary').innerHTML = '<article class="card"><h3 class="label">No dashboard data yet</h3><p class="value">—</p></article>';
+        document.getElementById('executive-brief').innerHTML = '<p class="insight">Executive brief unavailable.</p>';
+        document.getElementById('remediation-cards').innerHTML = '<article class="card"><h3 class="label">Remediation baseline</h3><p class="value">—</p></article>';
+        document.getElementById('remediation-summary').textContent = 'No remediation baseline yet.';
+        document.getElementById('validation-cards').innerHTML = '<article class="card"><h3 class="label">Validation wins</h3><p class="value">—</p></article>';
+        document.getElementById('resolved-rules').innerHTML = '<tr><td colspan="2">No validation wins data available.</td></tr>';
+        document.getElementById('guardrail-cards').innerHTML = '<article class="card"><h3 class="label">Guardrails</h3><p class="value">—</p></article>';
+        document.getElementById('ignored-reasons').innerHTML = '<tr><td colspan="2">No ignored issue data available.</td></tr>';
+        document.getElementById('guardrails-proof').textContent = '';
         document.getElementById('trend').textContent = 'No trend data available.';
-        document.getElementById('violations').innerHTML = '<tr><td colspan="2">No violation data available.</td></tr>';
+        document.getElementById('violations').innerHTML = '<tr><td colspan="3">No violation data available.</td></tr>';
         document.getElementById('scorecard').innerHTML = '<tr><td colspan="5">No site scorecard data available.</td></tr>';
+        document.getElementById('patterns').innerHTML = '<tr><td colspan="4">No recurring issue pattern data available.</td></tr>';
+        document.getElementById('rule-impact').innerHTML = '<tr><td colspan="7">No rule impact drill-down data available.</td></tr>';
+        document.getElementById('action-items').innerHTML = '<tr><td colspan="6">No action recommendations available.</td></tr>';
+        document.getElementById('magic-opportunities').innerHTML = '<li>No opportunities generated yet.</li>';
+        document.getElementById('owner-hotspots').innerHTML = '<tr><td colspan="3">No owner hotspot data available.</td></tr>';
+        document.getElementById('scan-profiles').innerHTML = '<tr><td colspan="4">No scan profiles available.</td></tr>';
+        document.getElementById('scan-combinations').innerHTML = '<tr><td colspan="4">No scan combinations available.</td></tr>';
+        document.getElementById('scan-cli-examples').innerHTML = '<li>No CLI examples available.</li>';
+        document.getElementById('workflow-launch-link').textContent = '';
+        document.getElementById('scan-proof').textContent = '';
         status.textContent = `Dashboard data unavailable: ${String(error)}`;
         return;
       }
@@ -148,21 +389,185 @@
         ['MTTR (days)', data.summary.mttrDays]
       ];
       document.getElementById('summary').innerHTML = cards.map(([k, v]) =>
-        `<article class="card"><h3 class="label">${k}</h3><p class="value">${v}</p></article>`
+        `<article class="card"><h3 class="label">${escapeHtml(k)}</h3><p class="value">${escapeHtml(v)}</p></article>`
       ).join('');
+
+      const brief = data.executiveBrief || {};
+      const driver = brief.primaryDriver;
+      const site = brief.highestRiskSite;
+      const pattern = brief.topRecurringPattern;
+      document.getElementById('executive-brief').innerHTML = `
+        <p class="insight"><strong>Focus:</strong> ${escapeHtml(brief.focusStatement || 'No focus statement generated yet.')}</p>
+        <p class="small"><strong>Primary driver:</strong> ${escapeHtml(driver ? `${driver.ruleId} (${driver.openFindings} open, ${driver.shareOpenPercent}%)` : 'n/a')}</p>
+        <p class="small"><strong>Highest-risk site:</strong> ${escapeHtml(site ? `${site.site} (${site.highImpact} high-impact of ${site.total} total)` : 'n/a')}</p>
+        <p class="small"><strong>Top repeated pattern:</strong> ${escapeHtml(pattern ? `${pattern.ruleId} on ${pattern.pathPattern} (${pattern.count})` : 'n/a')}</p>
+      `;
+
+      const progress = data.remediationProgress || {};
+      const remediationCards = [
+        ['Open delta', progress.hasBaseline ? progress.openDelta : 'n/a'],
+        ['High-impact delta', progress.hasBaseline ? progress.highImpactDelta : 'n/a'],
+        ['Health delta', progress.hasBaseline ? progress.healthDelta : 'n/a'],
+      ];
+      document.getElementById('remediation-cards').innerHTML = remediationCards.map(([k, v]) =>
+        `<article class="card"><h3 class="label">${escapeHtml(k)}</h3><p class="value">${escapeHtml(v)}</p></article>`
+      ).join('');
+      document.getElementById('remediation-summary').textContent = progress.summary || 'No remediation baseline yet.';
+
+      const wins = data.validationWins || {};
+      const validationCards = [
+        ['Rules currently clean', wins.rulesCurrentlyClean ?? 0],
+        ['Tracked rules', wins.trackedRuleCount ?? 0],
+        ['Clean rule share', `${escapeHtml(wins.cleanRuleSharePercent ?? 0)}%`],
+        ['Closed findings (30d)', wins.closedFindingsLast30d ?? 0]
+      ];
+      document.getElementById('validation-cards').innerHTML = validationCards.map(([k, v]) =>
+        `<article class="card"><h3 class="label">${escapeHtml(k)}</h3><p class="value">${escapeHtml(v)}</p></article>`
+      ).join('');
+      const resolvedRules = wins.resolvedRulesTop || [];
+      document.getElementById('resolved-rules').innerHTML = resolvedRules.length
+        ? resolvedRules.map(item => `<tr><td>${escapeHtml(item.ruleId)}</td><td>${escapeHtml(item.closedCount)}</td></tr>`).join('')
+        : '<tr><td colspan="2">No resolved clean-rule data available yet.</td></tr>';
+
+      const qc = data.qualityControls || {};
+      const guardrailCards = [
+        ['Raw open', qc.rawOpenIssues ?? 0],
+        ['Ignored (labels)', qc.ignoredOpenIssues ?? 0],
+        ['Deduped open', qc.dedupedOpenIssues ?? 0],
+        ['Duplicate entries ignored', qc.duplicateEntriesIgnored ?? 0],
+        ['Stale actionable (>14d)', qc.staleActionableIssues ?? 0]
+      ];
+      document.getElementById('guardrail-cards').innerHTML = guardrailCards.map(([k, v]) =>
+        `<article class="card"><h3 class="label">${escapeHtml(k)}</h3><p class="value">${escapeHtml(v)}</p></article>`
+      ).join('');
+      const ignoredReasons = qc.ignoredByReason || [];
+      document.getElementById('ignored-reasons').innerHTML = ignoredReasons.length
+        ? ignoredReasons.map(row => `<tr><td>${escapeHtml(row.reason)}</td><td>${escapeHtml(row.count)}</td></tr>`).join('')
+        : '<tr><td colspan="2">No ignored issue labels found.</td></tr>';
+      document.getElementById('guardrails-proof').textContent = `Proof point: dashboard metrics use deduped open count (${qc.dedupedOpenIssues ?? 0}) from raw open (${qc.rawOpenIssues ?? 0}), with ignored labels (${qc.ignoredOpenIssues ?? 0}) and duplicate signatures filtered (${qc.duplicateEntriesIgnored ?? 0}).`;
 
       const trendLines = data.trend90d.map(p => `${p.period.padEnd(3)} | Open ${String(p.openIssues).padStart(3)} | Closed ${String(p.closedIssues).padStart(3)}`);
       document.getElementById('trend').textContent = trendLines.join('\n');
 
       document.getElementById('violations').innerHTML = data.topViolations
-        .map(v => `<tr><td>${v.ruleId}</td><td>${v.count}</td></tr>`).join('');
+        .map(v => `<tr><td>${escapeHtml(v.ruleId)}</td><td>${escapeHtml(v.count)}</td><td><button type="button" class="help-button" data-rule="${escapeHtml(v.ruleId)}">Rule guide</button></td></tr>`).join('');
 
       document.getElementById('scorecard').innerHTML = data.siteScorecard
-        .map(s => `<tr><td>${s.site}</td><td>${s.critical}</td><td>${s.serious}</td><td>${s.moderate}</td><td>${s.minor}</td></tr>`)
+        .map(s => `<tr><td>${escapeHtml(s.site)}</td><td>${escapeHtml(s.critical)}</td><td>${escapeHtml(s.serious)}</td><td>${escapeHtml(s.moderate)}</td><td>${escapeHtml(s.minor)}</td></tr>`)
         .join('');
+
+      const recurring = (data.drilldowns && data.drilldowns.recurringIssuePatterns) || [];
+      document.getElementById('patterns').innerHTML = recurring.length
+        ? recurring.map(p => `
+            <tr>
+              <td>${escapeHtml(p.ruleId)}</td>
+              <td>${escapeHtml(p.pathPattern)}</td>
+              <td>${escapeHtml(p.count)}</td>
+              <td><a href="${p.sampleIssueUrl}" target="_blank" rel="noopener noreferrer">View issue</a> · <button type="button" class="help-button" data-rule="${escapeHtml(p.ruleId)}" data-path="${escapeHtml(p.pathPattern)}">Pattern guide</button></td>
+            </tr>
+          `).join('')
+        : '<tr><td colspan="4">No recurring issue pattern data available.</td></tr>';
+
+      const ruleImpact = (data.drilldowns && data.drilldowns.ruleImpact) || [];
+      document.getElementById('rule-impact').innerHTML = ruleImpact.length
+        ? ruleImpact.map(r => `
+            <tr>
+              <td>${escapeHtml(r.ruleId)}</td>
+              <td>${escapeHtml(r.critical)}</td>
+              <td>${escapeHtml(r.serious)}</td>
+              <td>${escapeHtml(r.moderate)}</td>
+              <td>${escapeHtml(r.minor)}</td>
+              <td>${escapeHtml(r.total)}</td>
+              <td><button type="button" class="help-button" data-rule="${escapeHtml(r.ruleId)}">Fix guide</button></td>
+            </tr>
+          `).join('')
+        : '<tr><td colspan="7">No rule impact drill-down data available.</td></tr>';
+
+      const actions = (data.actionCenter && data.actionCenter.prioritizedActions) || [];
+      document.getElementById('action-items').innerHTML = actions.length
+        ? actions.map(action => `
+            <tr>
+              <td><span class="pill">${escapeHtml(action.priority)}</span></td>
+              <td>${escapeHtml(action.actionTitle)}<br><span class="small">${escapeHtml(action.recommendedFix || '')}</span></td>
+              <td>${escapeHtml(action.ownerTeam)}</td>
+              <td>${escapeHtml(action.likelyFixArea)}</td>
+              <td>${escapeHtml(action.openFindings)} / ${escapeHtml(action.affectedPathCount || 0)}</td>
+              <td>
+                <a href="${action.sampleIssueUrl}" target="_blank" rel="noopener noreferrer">Sample</a> ·
+                <a href="${action.issueDraftUrl}" target="_blank" rel="noopener noreferrer">Draft issue</a>
+              </td>
+            </tr>
+          `).join('')
+        : '<tr><td colspan="6">No action recommendations available.</td></tr>';
+
+      const opportunities = (data.actionCenter && data.actionCenter.magicOpportunities) || [];
+      document.getElementById('magic-opportunities').innerHTML = opportunities.length
+        ? opportunities.map(item => `<li>${escapeHtml(item)}</li>`).join('')
+        : '<li>No opportunities generated yet.</li>';
+
+      const hotspots = (data.actionCenter && data.actionCenter.hotspotOwners) || [];
+      document.getElementById('owner-hotspots').innerHTML = hotspots.length
+        ? hotspots.map(row => `
+            <tr>
+              <td>${escapeHtml(row.ownerTeam)}</td>
+              <td>${escapeHtml(row.representedFindings)}</td>
+              <td>${escapeHtml(row.affectedPatterns)}</td>
+            </tr>
+          `).join('')
+        : '<tr><td colspan="3">No owner hotspot data available.</td></tr>';
+
+      const scanOps = data.scanOperations || {};
+      const profiles = scanOps.profiles || [];
+      document.getElementById('scan-profiles').innerHTML = profiles.length
+        ? profiles.map(profile => `
+            <tr>
+              <td>${escapeHtml(profile.label)}</td>
+              <td>${escapeHtml(profile.scanMode)} / ${escapeHtml(profile.ruleProfile)}</td>
+              <td>${escapeHtml(profile.triggerType)}</td>
+              <td>${escapeHtml(profile.estimatedRuntimeMinutes)} min</td>
+            </tr>
+          `).join('')
+        : '<tr><td colspan="4">No scan profiles available.</td></tr>';
+
+      const combinations = scanOps.combinations || [];
+      document.getElementById('scan-combinations').innerHTML = combinations.length
+        ? combinations.map(combo => `
+            <tr>
+              <td>${escapeHtml(combo.combination)}</td>
+              <td>${escapeHtml(combo.expectedSignal)}</td>
+              <td>${escapeHtml(combo.estimatedRuntimeMinutes)} min</td>
+              <td>${escapeHtml(combo.estimatedNoiseReductionPercent)}%</td>
+            </tr>
+          `).join('')
+        : '<tr><td colspan="4">No scan combinations available.</td></tr>';
+
+      const launcher = scanOps.launcher || {};
+      document.getElementById('workflow-launch-link').innerHTML = launcher.githubActionsUrl
+        ? `Launch manually in Actions: <a href="${launcher.githubActionsUrl}" target="_blank" rel="noopener noreferrer">${escapeHtml(launcher.workflowPath || 'workflow')}</a>`
+        : 'No launcher workflow configured yet.';
+      const cliExamples = launcher.ghCliExamples || [];
+      document.getElementById('scan-cli-examples').innerHTML = cliExamples.length
+        ? cliExamples.map(example => `<li><code>${escapeHtml(example)}</code></li>`).join('')
+        : '<li>No CLI examples available.</li>';
+
+      const proof = scanOps.proof || {};
+      document.getElementById('scan-proof').textContent = `Noise control proof: ${proof.duplicateEntriesIgnored ?? 0} duplicate signatures are suppressed from executive counts (estimated ${proof.estimatedNoiseReductionPercent ?? 0}% noise reduction).`;
 
       status.textContent = `Dashboard data loaded. Last updated ${new Date(data.generatedAt || Date.now()).toLocaleString()}.`;
     }
+    document.addEventListener('click', (event) => {
+      const closeButton = event.target.closest('[data-close-guidance]');
+      if (closeButton) {
+        const modal = document.getElementById('guidance-modal');
+        if (modal.open) modal.close();
+        return;
+      }
+      const button = event.target.closest('.help-button');
+      if (!button) return;
+      const rule = button.getAttribute('data-rule') || '';
+      const path = button.getAttribute('data-path') || '';
+      renderRuleHelp(rule, path);
+    });
     load();
     loadRunStatus();
     setInterval(loadRunStatus, 60000);

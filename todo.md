@@ -1,5 +1,14 @@
 # Todo
 
+## Current Program Status (May 2026)
+
+- [x] Capture and document DRC-reported 2026 potential issue baseline (2 CSV files, 346 total occurrences, 10 issue IDs)
+- [x] Open upstream Quickstart remediation PR wave (#5639-#5645) mapped to high/medium-confidence issue patterns
+- [x] Apply CI reliability corrections in active remediation branches (composer-audit handling + carousel lint fixes)
+- [x] Consolidate leadership-ready reporting and Tugboat/live comparison findings for technical and non-technical audiences
+- [ ] Merge approved remediation PRs and run same-route post-merge verification scan
+- [ ] Publish measured before/after dashboard delta after verification run (replace projected values with observed values)
+
 ## Definitive Execution Order (Both Paths Covered)
 
 ### 1) Foundation Setup (Week 0-1)
@@ -63,3 +72,11 @@
 - [ ] Add role ownership labels (`owner:content-editor`, `owner:site-builder`, `owner:dev`) to issue workflow
 - [ ] Map accessibility issue types to Quickstart workshop tracks (Content Editor vs Site Builder)
 - [ ] Document ServiceNow escalation flow for platform blockers and approved exceptions (`https://web.arizona.edu/help`)
+
+### 8) Configurable Scan + Reporting Operations (Implemented)
+- [x] Add configurable workflow supporting user-fired `workflow_dispatch` and admin scheduled combinations (`.github/workflows/configurable-scan.yml`)
+- [x] Support scan combinations (`delta` and `complete`, plus rule profiles `focused-rules` / `all-rules` / `axe-only`)
+- [x] Add dashboard simulation of profile combinations and launcher metadata (Actions URL + CLI examples)
+- [x] Add dedupe/ignore guardrail proof counters into executive metrics
+- [x] Generate static email/share report artifact at `dashboard/static/latest-report.html` on refresh
+- [x] Add remediation delta tracking between snapshots (open/high-impact/health deltas)

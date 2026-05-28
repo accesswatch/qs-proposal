@@ -17,6 +17,15 @@
 </head>
 <body>
 <h1 id="todo">Todo</h1>
+<h2 id="current-program-status-may-2026">Current Program Status (May 2026)</h2>
+<ul>
+<li>[x] Capture and document DRC-reported 2026 potential issue baseline (2 CSV files, 346 total occurrences, 10 issue IDs)</li>
+<li>[x] Open upstream Quickstart remediation PR wave (#5639-#5645) mapped to high/medium-confidence issue patterns</li>
+<li>[x] Apply CI reliability corrections in active remediation branches (composer-audit handling + carousel lint fixes)</li>
+<li>[x] Consolidate leadership-ready reporting and Tugboat/live comparison findings for technical and non-technical audiences</li>
+<li>[ ] Merge approved remediation PRs and run same-route post-merge verification scan</li>
+<li>[ ] Publish measured before/after dashboard delta after verification run (replace projected values with observed values)</li>
+</ul>
 <h2 id="definitive-execution-order-both-paths-covered">Definitive Execution Order (Both Paths Covered)</h2>
 <h3 id="1-foundation-setup-week-0-1">1) Foundation Setup (Week 0-1)</h3>
 <ul>
@@ -86,6 +95,15 @@
 <li>[ ] Add role ownership labels (<code>owner:content-editor</code>, <code>owner:site-builder</code>, <code>owner:dev</code>) to issue workflow</li>
 <li>[ ] Map accessibility issue types to Quickstart workshop tracks (Content Editor vs Site Builder)</li>
 <li>[ ] Document ServiceNow escalation flow for platform blockers and approved exceptions (<code>https://web.arizona.edu/help</code>)</li>
+</ul>
+<h3 id="8-configurable-scan-reporting-operations-implemented">8) Configurable Scan + Reporting Operations (Implemented)</h3>
+<ul>
+<li>[x] Add configurable workflow supporting user-fired <code>workflow_dispatch</code> and admin scheduled combinations (<code>.github/workflows/configurable-scan.yml</code>)</li>
+<li>[x] Support scan combinations (<code>delta</code> and <code>complete</code>, plus rule profiles <code>focused-rules</code> / <code>all-rules</code> / <code>axe-only</code>)</li>
+<li>[x] Add dashboard simulation of profile combinations and launcher metadata (Actions URL + CLI examples)</li>
+<li>[x] Add dedupe/ignore guardrail proof counters into executive metrics</li>
+<li>[x] Generate static email/share report artifact at <code>dashboard/static/latest-report.html</code> on refresh</li>
+<li>[x] Add remediation delta tracking between snapshots (open/high-impact/health deltas)</li>
 </ul>
 </body>
 </html>

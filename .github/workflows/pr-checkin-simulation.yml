@@ -1,8 +1,6 @@
 name: PR Check-in Accessibility Simulation
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
       target_url:
@@ -13,6 +11,11 @@ on:
         description: 'Run in non-blocking mode (true/false)'
         required: true
         default: 'true'
+      file_issues:
+        description: 'Create GitHub issues from findings (manual only)'
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   pr_simulation_scan:
@@ -25,11 +28,7 @@ jobs:
         id: target
         shell: bash
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            TARGET="${{ inputs.target_url }}"
-          else
-            TARGET="https://quickstart.arizona.edu"
-          fi
+          TARGET="${{ inputs.target_url }}"
           echo "target=$TARGET" >> "$GITHUB_OUTPUT"
 
       - name: Discover URLs from target
@@ -46,8 +45,9 @@ jobs:
 
       - name: Scan discovered URLs (PR simulation)
         id: scan
+        if: ${{ inputs.file_issues == true }}
         uses: github/accessibility-scanner@v3
-        continue-on-error: ${{ github.event_name == 'workflow_dispatch' && inputs.non_blocking == 'true' }}
+        continue-on-error: ${{ inputs.non_blocking == 'true' }}
         with:
           url_configs: ${{ steps.discover.outputs.url_configs }}
           repository: accesswatch/qs-proposal
@@ -66,8 +66,9 @@ jobs:
             echo ""
             echo "- Target URL: \`${{ steps.target.outputs.target }}\`"
             echo "- Discovered URL count: \`${{ steps.discover.outputs.count }}\`"
-            echo "- Mode: \`${{ github.event_name == 'workflow_dispatch' && inputs.non_blocking == 'true' && 'non-blocking' || 'enforced' }}\`"
-            echo "- Scan step outcome: \`${{ steps.scan.outcome }}\`"
+            echo "- Mode: \`${{ inputs.non_blocking == 'true' && 'non-blocking' || 'enforced' }}\`"
+            echo "- Issue filing enabled: \`${{ inputs.file_issues }}\`"
+            echo "- Scan step outcome: \`${{ steps.scan.outcome || 'skipped' }}\`"
             echo ""
-            echo "Issues are filed in \`accesswatch/qs-proposal\`."
+            echo "Issue filing is manual-only and must be explicitly enabled."
           } >> "$GITHUB_STEP_SUMMARY"
