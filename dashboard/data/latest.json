@@ -1,0 +1,67 @@
+{
+  "generatedAt": "2026-05-28T00:06:48.622Z",
+  "summary": {
+    "healthScore": 0,
+    "openIssues": 500,
+    "highImpactOpen": 0,
+    "regressionRate": 0,
+    "mttrDays": 0
+  },
+  "trend90d": [
+    {
+      "period": "W1",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W2",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W3",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W4",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W5",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W6",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W7",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W8",
+      "openIssues": 500,
+      "closedIssues": 0
+    }
+  ],
+  "topViolations": [
+    {
+      "ruleId": "unknown",
+      "count": 500
+    }
+  ],
+  "siteScorecard": [
+    {
+      "site": "unknown-site",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 500,
+      "minor": 0
+    }
+  ]
+}

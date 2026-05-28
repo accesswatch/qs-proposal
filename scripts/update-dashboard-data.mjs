@@ -3,6 +3,7 @@ import path from 'node:path'
 
 const token = process.env.GITHUB_TOKEN
 const repository = process.env.DASHBOARD_REPOSITORY || 'accesswatch/qs-proposal'
+const defaultSite = process.env.DASHBOARD_DEFAULT_SITE || 'quickstart.arizona.edu'
 if (!token) throw new Error('GITHUB_TOKEN is required')
 
 const [owner, repo] = repository.split('/')
@@ -55,27 +56,31 @@ function buildMetrics(issues) {
   let weightedOpen = 0
   const topViolationsMap = new Map()
   const sitesMap = new Map()
+  let highImpactOpen = 0
 
   for (const issue of open) {
     const labels = issue.labels.map(l => typeof l === 'string' ? l : l.name).filter(Boolean)
-    const impactLabel = labels.find(l => l.startsWith('impact:'))
-    const impact = impactLabel ? impactLabel.replace('impact:', '') : 'moderate'
-    weightedOpen += impactWeights[impact] || 2
+    const rule = extractRule(issue.title, labels)
+    const impact = inferImpact(labels, rule)
+    const site = inferSite(issue.title, labels, defaultSite)
 
-    const ruleLabel = labels.find(l => l.startsWith('rule:')) || extractRuleFromTitle(issue.title)
-    const rule = ruleLabel.replace('rule:', '')
+    weightedOpen += impactWeights[impact] || 2
+    if (impact === 'critical' || impact === 'serious') highImpactOpen += 1
+
     topViolationsMap.set(rule, (topViolationsMap.get(rule) || 0) + 1)
 
-    const siteLabel = labels.find(l => l.startsWith('site:'))
-    const site = siteLabel ? siteLabel.replace('site:', '') : 'unknown-site'
-    if (!sitesMap.has(site)) sitesMap.set(site, {site, critical: 0, serious: 0, moderate: 0, minor: 0})
+    if (!sitesMap.has(site)) {
+      sitesMap.set(site, {site, critical: 0, serious: 0, moderate: 0, minor: 0})
+    }
     const siteRow = sitesMap.get(site)
     siteRow[impact] = (siteRow[impact] || 0) + 1
   }
 
   const healthScore = Math.max(0, 100 - weightedOpen)
-  const mttrDays = computeMttrDays(closed, now)
-  const highImpactOpen = open.filter(i => hasImpact(i, 'critical') || hasImpact(i, 'serious')).length
+  const mttrDays = computeMttrDays(closed)
+  const trend90d = buildWeeklyTrend(issues, now)
+  const latestPeriod = trend90d[trend90d.length - 1]
+  const regressionRate = latestPeriod ? Number((latestPeriod.openIssues / Math.max(open.length, 1)).toFixed(3)) : 0
 
   const topViolations = [...topViolationsMap.entries()]
     .sort((a, b) => b[1] - a[1])
@@ -90,16 +95,16 @@ function buildMetrics(issues) {
       healthScore,
       openIssues: open.length,
       highImpactOpen,
-      regressionRate: 0,
+      regressionRate,
       mttrDays
     },
-    trend90d: buildWeeklyTrend(issues, now),
+    trend90d,
     topViolations,
     siteScorecard
   }
 }
 
-function computeMttrDays(closed, now) {
+function computeMttrDays(closed) {
   if (closed.length === 0) return 0
   const days = closed
     .filter(i => i.closed_at && i.created_at)
@@ -108,14 +113,52 @@ function computeMttrDays(closed, now) {
   return Number((days.reduce((a, b) => a + b, 0) / days.length).toFixed(1))
 }
 
-function hasImpact(issue, impact) {
-  const labels = issue.labels.map(l => typeof l === 'string' ? l : l.name).filter(Boolean)
-  return labels.includes(`impact:${impact}`)
+function extractRule(title, labels) {
+  const axeRuleLabel = labels.find(label => label.toLowerCase().startsWith('axe rule:'))
+  if (axeRuleLabel) return axeRuleLabel.split(':').slice(1).join(':').trim().toLowerCase()
+
+  const explicitRuleLabel = labels.find(label => label.toLowerCase().startsWith('rule:'))
+  if (explicitRuleLabel) return explicitRuleLabel.split(':').slice(1).join(':').trim().toLowerCase()
+
+  return extractRuleFromTitle(title).replace('rule:', '')
 }
 
 function extractRuleFromTitle(title) {
   const match = title.match(/rule[:\s]+([a-z0-9-]+)/i)
   return `rule:${match ? match[1].toLowerCase() : 'unknown'}`
+}
+
+function inferSite(title, labels, defaultSite) {
+  const siteLabel = labels.find(label => label.toLowerCase().startsWith('site:'))
+  if (siteLabel) return siteLabel.split(':').slice(1).join(':').trim()
+
+  // accessibility-scanner titles often end with "on /path"
+  const pathMatch = title.match(/\son\s(\/[^\s]*)$/i)
+  if (pathMatch && defaultSite) return defaultSite
+
+  return defaultSite || 'unknown-site'
+}
+
+function inferImpact(labels, rule) {
+  const impactLabel = labels.find(label => label.startsWith('impact:'))
+  if (impactLabel) {
+    const labeledImpact = impactLabel.replace('impact:', '')
+    if (['critical', 'serious', 'moderate', 'minor'].includes(labeledImpact)) return labeledImpact
+  }
+
+  const criticalRules = new Set(['color-contrast', 'label', 'aria-allowed-attr', 'aria-required-attr'])
+  const seriousRules = new Set([
+    'heading-order',
+    'landmark-unique',
+    'landmark-contentinfo-is-top-level',
+    'landmark-no-duplicate-contentinfo',
+    'list',
+    'link-name',
+  ])
+
+  if (criticalRules.has(rule)) return 'critical'
+  if (seriousRules.has(rule)) return 'serious'
+  return 'moderate'
 }
 
 function buildWeeklyTrend(issues, now) {
