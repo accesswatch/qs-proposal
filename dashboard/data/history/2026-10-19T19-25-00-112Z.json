@@ -1,0 +1,211 @@
+{
+  "generatedAt": "2026-10-19T19:25:00.026Z",
+  "summary": {
+    "healthScore": 100,
+    "openIssues": 0,
+    "highImpactOpen": 0,
+    "regressionRate": 0,
+    "mttrDays": 0
+  },
+  "remediationProgress": {
+    "hasBaseline": true,
+    "previousGeneratedAt": "2026-10-12T21:49:01.973Z",
+    "openDelta": 0,
+    "highImpactDelta": 0,
+    "healthDelta": 0,
+    "summary": "Open issues 0, high-impact 0, health score 0 since previous snapshot."
+  },
+  "validationWins": {
+    "trackedRuleCount": 13,
+    "rulesCurrentlyClean": 13,
+    "cleanRuleSharePercent": 100,
+    "closedFindingsLast30d": 0,
+    "closedFindingsTotal": 500,
+    "resolvedRulesTop": [
+      {
+        "ruleId": "landmark-contentinfo-is-top-level",
+        "closedCount": 100
+      },
+      {
+        "ruleId": "list",
+        "closedCount": 99
+      },
+      {
+        "ruleId": "landmark-unique",
+        "closedCount": 99
+      },
+      {
+        "ruleId": "landmark-no-duplicate-contentinfo",
+        "closedCount": 99
+      },
+      {
+        "ruleId": "heading-order",
+        "closedCount": 36
+      },
+      {
+        "ruleId": "page-has-heading-one",
+        "closedCount": 15
+      },
+      {
+        "ruleId": "region",
+        "closedCount": 10
+      },
+      {
+        "ruleId": "landmark-one-main",
+        "closedCount": 10
+      },
+      {
+        "ruleId": "html-has-lang",
+        "closedCount": 10
+      },
+      {
+        "ruleId": "document-title",
+        "closedCount": 10
+      }
+    ]
+  },
+  "qualityControls": {
+    "rawOpenIssues": 0,
+    "ignoredOpenIssues": 0,
+    "actionableOpenIssues": 0,
+    "dedupedOpenIssues": 0,
+    "duplicateEntriesIgnored": 0,
+    "ignoredByReason": [],
+    "ignoredIssuesSample": [],
+    "duplicateSignatureSample": [],
+    "staleActionableIssues": 0
+  },
+  "scanOperations": {
+    "launcher": {
+      "workflowPath": ".github/workflows/configurable-scan.yml",
+      "githubActionsUrl": "https://github.com/accesswatch/qs-proposal/actions/workflows/configurable-scan.yml",
+      "ghCliExamples": [
+        "gh workflow run configurable-scan.yml -R accesswatch/qs-proposal -f target=quickstart -f scan_mode=delta -f rule_profile=focused-rules -f run_source=frontend -f file_issues=false",
+        "gh workflow run configurable-scan.yml -R accesswatch/qs-proposal -f target=quickstart -f scan_mode=complete -f rule_profile=all-rules -f run_source=admin -f file_issues=true"
+      ]
+    },
+    "profiles": [
+      {
+        "profileId": "complete-baseline",
+        "label": "Complete Baseline Scan",
+        "triggerType": "Admin manual run",
+        "scanMode": "complete",
+        "ruleProfile": "all-rules",
+        "behavior": "Runs full crawl/rule coverage and refreshes full issue truth.",
+        "suggestedCadence": "Nightly or weekly",
+        "estimatedRuntimeMinutes": 20
+      },
+      {
+        "profileId": "delta-new-issues",
+        "label": "Delta (New Issues Only)",
+        "triggerType": "Frontend launcher or manual",
+        "scanMode": "delta",
+        "ruleProfile": "focused-rules",
+        "behavior": "Prioritizes new signatures and treats known signatures as persistent status, not new alerts.",
+        "suggestedCadence": "On demand and hourly in active remediation windows",
+        "estimatedRuntimeMinutes": 9
+      },
+      {
+        "profileId": "complete-fast",
+        "label": "Complete Fast (Axe Only)",
+        "triggerType": "Admin manual run",
+        "scanMode": "complete",
+        "ruleProfile": "axe-only",
+        "behavior": "Runs complete signature coverage without reflow scan to shorten runtime.",
+        "suggestedCadence": "Daily",
+        "estimatedRuntimeMinutes": 15
+      }
+    ],
+    "combinations": [
+      {
+        "combination": "Frontend: delta + focused rules",
+        "objective": "Fast triage after content/template updates",
+        "estimatedRuntimeMinutes": 9,
+        "expectedSignal": "New issues list + persistent count",
+        "estimatedNoiseReductionPercent": 0
+      },
+      {
+        "combination": "Admin manual: complete baseline",
+        "objective": "Authoritative risk snapshot",
+        "estimatedRuntimeMinutes": 20,
+        "expectedSignal": "Full risk, trend, and scorecard updates",
+        "estimatedNoiseReductionPercent": 0
+      },
+      {
+        "combination": "Admin manual: complete fast",
+        "objective": "Daily regression watch with lower runtime",
+        "estimatedRuntimeMinutes": 15,
+        "expectedSignal": "Broad detection with lower scan cost",
+        "estimatedNoiseReductionPercent": 0
+      }
+    ],
+    "proof": {
+      "knownSignatureCount": 0,
+      "duplicateEntriesIgnored": 0,
+      "estimatedNoiseReductionPercent": 0,
+      "sampleCandidateRulesForFocusedProfile": []
+    }
+  },
+  "trend90d": [
+    {
+      "period": "W1",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W2",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W3",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W4",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W5",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W6",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W7",
+      "openIssues": 0,
+      "closedIssues": 0
+    },
+    {
+      "period": "W8",
+      "openIssues": 0,
+      "closedIssues": 0
+    }
+  ],
+  "topViolations": [],
+  "siteScorecard": [],
+  "executiveBrief": {
+    "primaryDriver": null,
+    "highestRiskSite": null,
+    "topRecurringPattern": null,
+    "focusStatement": "Not enough data yet for a risk concentration statement."
+  },
+  "actionCenter": {
+    "prioritizedActions": [],
+    "hotspotOwners": [],
+    "fixPlaybooks": [],
+    "magicOpportunities": []
+  },
+  "drilldowns": {
+    "recurringIssuePatterns": [],
+    "ruleImpact": [],
+    "siteRisk": [],
+    "recentOpenIssues": []
+  }
+}
