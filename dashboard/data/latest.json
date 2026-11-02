@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-26T19:29:33.793Z",
+  "generatedAt": "2026-11-02T22:25:48.003Z",
   "summary": {
     "healthScore": 100,
     "openIssues": 0,
@@ -9,7 +9,7 @@
   },
   "remediationProgress": {
     "hasBaseline": true,
-    "previousGeneratedAt": "2026-10-19T19:25:00.026Z",
+    "previousGeneratedAt": "2026-10-26T19:29:33.793Z",
     "openDelta": 0,
     "highImpactDelta": 0,
     "healthDelta": 0,
